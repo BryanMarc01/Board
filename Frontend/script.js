@@ -1,4 +1,4 @@
-const socket = io("http://localhost:3000");
+const socket = io("https://backend-devnotess.onrender.com/");
 const board = document.getElementById('board');
 
 socket.on('loadNotes', notes => {
