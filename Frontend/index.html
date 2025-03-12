@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📝 Sticky Notes con WebSockets</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+    /* Estilos adicionales */
+    .note {
+      transition: box-shadow 0.2s ease, transform 0.05s ease;
+      width: 250px;
+    }
+    .note.dragging {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+    .note-header {
+      cursor: move;
+    }
+    .color-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+    .color-option {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1px solid #ddd;
+    }
+    .modal {
+      transition: opacity 0.3s ease;
+    }
+    .modal-content {
+      transition: transform 0.3s ease;
+    }
+    .hidden {
+      display: none;
+    }
+    .note-content {
+      min-height: 80px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-7xl mx-auto p-4">
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold">📝 Sticky Notes en Tiempo Real</h1>
+      <button id="addNoteBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Agregar Nota
+      </button>
+    </header>
+
+    <div id="board" class="relative w-full min-h-[calc(100vh-8rem)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <!-- Las notas se generarán aquí dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Modal para crear/editar notas -->
+  <div id="noteModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md transform scale-95 opacity-0">
+      <div class="p-6">
+        <h3 id="modalTitle" class="text-xl font-semibold mb-4">Crear Nueva Nota</h3>
+        <textarea id="noteContent" class="w-full border border-gray-300 rounded-md p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe el contenido de tu nota aquí..."></textarea>
+        <div class="flex justify-end mt-4 space-x-2">
+          <button id="cancelBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100">Cancelar</button>
+          <button id="saveNoteBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuración de Socket.io
+    const socket = io("http://localhost:3000");
+    const board = document.getElementById('board');
+    const noteModal = document.getElementById('noteModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const noteContent = document.getElementById('noteContent');
+    const addNoteBtn = document.getElementById('addNoteBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Estado de la aplicación
+    let notes = [];
+    let activeNoteId = null;
+    let isDragging = false;
+    let draggedNote = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    // Colores disponibles para las notas
+    const noteColors = [
+      { class: 'bg-yellow-200', name: 'Amarillo' },
+      { class: 'bg-blue-200', name: 'Azul' },
+      { class: 'bg-green-200', name: 'Verde' },
+      { class: 'bg-pink-200', name: 'Rosa' },
+      { class: 'bg-purple-200', name: 'Púrpura' },
+      { class: 'bg-orange-200', name: 'Naranja' }
+    ];
+
+    // Eventos de Socket.io
+    socket.on('connect', () => console.log('✅ Conectado al servidor'));
+    
+    socket.on('loadNotes', loadedNotes => {
+      notes = loadedNotes.map(note => ({
+        ...note,
+        color: note.color || 'bg-yellow-200' // Color por defecto
+      }));
+      renderAllNotes();
+    });
+    
+    socket.on('newNote', note => {
+      notes.push({
+        ...note,
+        color: note.color || 'bg-yellow-200'
+      });
+      renderNote(note);
+    });
+    
+    socket.on('updateNote', updatedNote => {
+      notes = notes.map(note => 
+        note.id === updatedNote.id ? updatedNote : note
+      );
+      updateNoteElement(updatedNote);
+    });
+    
+    socket.on('deleteNote', noteId => {
+      notes = notes.filter(note => note.id !== noteId);
+      const noteElement = document.getElementById(`note-${noteId}`);
+      if (noteElement) noteElement.remove();
+    });
+
+    // Funciones para manipular notas
+    function renderAllNotes() {
+      board.innerHTML = '';
+      notes.forEach(renderNote);
+    }
+
+    function renderNote(note) {
+      // Verificar si la nota ya existe
+      const existingNote = document.getElementById(`note-${note.id}`);
+      if (existingNote) {
+        updateNoteElement(note);
+        return;
+      }
+
+      // Crear elemento de nota
+      const noteElement = document.createElement('div');
+      noteElement.id = `note-${note.id}`;
+      noteElement.className = `note absolute p-4 rounded-md shadow-md ${note.color || 'bg-yellow-200'}`;
+      noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
+      
+      // Estructura interna de la nota
+      noteElement.innerHTML = `
+        <div class="note-header flex justify-between items-center mb-2">
+          <div class="flex space-x-1">
+            <button class="edit-btn p-1 rounded-full hover:bg-white hover:bg-opacity-30">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button class="color-btn p-1 rounded-full hover:bg-white hover:bg-opacity-30">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="13.5" cy="6.5" r="2.5"></circle>
+                <circle cx="19" cy="13" r="2.5"></circle>
+                <circle cx="6" cy="12" r="2.5"></circle>
+                <circle cx="12" cy="19" r="2.5"></circle>
+              </svg>
+            </button>
+          </div>
+          <button class="delete-btn p-1 rounded-full hover:bg-white hover:bg-opacity-30 text-red-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="color-picker hidden bg-white p-2 rounded border mb-2"></div>
+        <div class="note-content whitespace-pre-wrap break-words">${note.content}</div>
+      `;
+      
+      board.appendChild(noteElement);
+      
+      // Configurar el selector de colores
+      const colorPicker = noteElement.querySelector('.color-picker');
+      noteColors.forEach(color => {
+        const colorOption = document.createElement('div');
+        colorOption.className = `color-option ${color.class}`;
+        colorOption.title = color.name;
+        colorOption.addEventListener('click', () => {
+          changeNoteColor(note.id, color.class);
+          colorPicker.classList.add('hidden');
+        });
+        colorPicker.appendChild(colorOption);
+      });
+      
+      // Configurar eventos
+      setupNoteEvents(noteElement, note.id);
+    }
+
+    function updateNoteElement(note) {
+      const noteElement = document.getElementById(`note-${note.id}`);
+      if (!noteElement) return;
+      
+      // Actualizar contenido y posición
+      noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
+      noteElement.querySelector('.note-content').textContent = note.content;
+      
+      // Actualizar color
+      noteElement.className = noteElement.className.replace(/bg-\w+-\d+/, note.color || 'bg-yellow-200');
+    }
+
+    function setupNoteEvents(noteElement, noteId) {
+      // Botón de editar
+      noteElement.querySelector('.edit-btn').addEventListener('click', () => {
+        editNote(noteId);
+      });
+      
+      // Botón de eliminar
+      noteElement.querySelector('.delete-btn').addEventListener('click', () => {
+        deleteNote(noteId);
+      });
+      
+      // Botón de color
+      noteElement.querySelector('.color-btn').addEventListener('click', () => {
+        const colorPicker = noteElement.querySelector('.color-picker');
+        colorPicker.classList.toggle('hidden');
+      });
+      
+      // Eventos de arrastre
+      noteElement.addEventListener('mousedown', (e) => {
+        // No iniciar arrastre si se hizo clic en un botón
+        if (e.target.closest('button')) return;
+        
+        startDrag(e, noteId);
+      });
+      
+      // Cerrar el selector de colores al hacer clic fuera
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.color-btn') && !e.target.closest('.color-picker')) {
+          const colorPickers = document.querySelectorAll('.color-picker');
+          colorPickers.forEach(picker => picker.classList.add('hidden'));
+        }
+      });
+    }
+
+    function startDrag(e, noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      isDragging = true;
+      draggedNote = noteId;
+      
+      const noteElement = document.getElementById(`note-${noteId}`);
+      noteElement.classList.add('dragging');
+      
+      // Calcular offset para que el arrastre sea relativo a donde se hizo clic
+      const rect = noteElement.getBoundingClientRect();
+      dragOffset = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      
+      // Agregar event listeners para el movimiento
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', stopDrag);
+      
+      // Prevenir comportamiento predeterminado
+      e.preventDefault();
+    }
+
+    function handleMouseMove(e) {
+      if (!isDragging || !draggedNote) return;
+      
+      const note = notes.find(n => n.id === draggedNote);
+      if (!note) return;
+      
+      // Calcular nueva posición
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      // Actualizar posición visual
+      const noteElement = document.getElementById(`note-${draggedNote}`);
+      noteElement.style.transform = `translate(${newX}px, ${newY}px)`;
+      
+      // Actualizar objeto de nota
+      note.x = newX;
+      note.y = newY;
+    }
+
+    function stopDrag() {
+      if (!isDragging || !draggedNote) return;
+      
+      const note = notes.find(n => n.id === draggedNote);
+      if (note) {
+        // Enviar la posición final al servidor
+        socket.emit('updateNote', note);
+      }
+      
+      // Limpiar estado de arrastre
+      const noteElement = document.getElementById(`note-${draggedNote}`);
+      if (noteElement) noteElement.classList.remove('dragging');
+      
+      isDragging = false;
+      draggedNote = null;
+      
+      // Eliminar event listeners
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopDrag);
+    }
+
+    function addNote() {
+      activeNoteId = Date.now().toString();
+      modalTitle.textContent = 'Crear Nueva Nota';
+      noteContent.value = '';
+      openModal();
+    }
+
+    function editNote(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      activeNoteId = noteId;
+      modalTitle.textContent = 'Editar Nota';
+      noteContent.value = note.content;
+      openModal();
+    }
+
+    function deleteNote(noteId) {
+      socket.emit('deleteNote', noteId);
+    }
+
+    function changeNoteColor(noteId, colorClass) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      note.color = colorClass;
+      socket.emit('updateNote', note);
+    }
+
+    function saveNote() {
+      if (!activeNoteId) return;
+      
+      const content = noteContent.value.trim();
+      if (!content) return;
+      
+      const existingNote = notes.find(n => n.id === activeNoteId);
+      
+      if (existingNote) {
+        // Actualizar nota existente
+        existingNote.content = content;
+        socket.emit('updateNote', existingNote);
+      } else {
+        // Crear nueva nota
+        const newNote = {
+          id: activeNoteId,
+          content,
+          x: Math.random() * 100 + 50,
+          y: Math.random() * 100 + 50,
+          color: 'bg-yellow-200'
+        };
+        socket.emit('newNote', newNote);
+      }
+      
+      closeModal();
+    }
+
+    function openModal() {
+      noteModal.classList.remove('hidden');
+      setTimeout(() => {
+        noteModal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
+        noteModal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
+      }, 10);
+      noteContent.focus();
+    }
+
+    function closeModal() {
+      const modalContent = noteModal.querySelector('.modal-content');
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
+      
+      setTimeout(() => {
+        noteModal.classList.add('hidden');
+        activeNoteId = null;
+      }, 300);
+    }
+
+    // Configurar eventos de la interfaz
+    addNoteBtn.addEventListener('click', addNote);
+    saveNoteBtn.addEventListener('click', saveNote);
+    cancelBtn.addEventListener('click', closeModal);
+    
+    // Cerrar modal al hacer clic fuera
+    noteModal.addEventListener('click', (e) => {
+      if (e.target === noteModal) closeModal();
+    });
+    
+    // Permitir enviar con Enter en el textarea
+    noteContent.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        saveNote();
+      }
+    });
+
+    // Inicializar con algunas notas de ejemplo si no hay datos del servidor
+    setTimeout(() => {
+      if (notes.length === 0) {
+        const defaultNotes = [
+          { id: '1', content: 'Bienvenido a Sticky Notes!\n\nArrastra esta nota para moverla.', x: 100, y: 100, color: 'bg-yellow-200' },
+          { id: '2', content: 'Haz clic en el botón de editar para modificar el contenido.', x: 400, y: 150, color: 'bg-blue-200' },
+          { id: '3', content: 'Puedes cambiar el color de las notas con el botón de paleta.', x: 200, y: 300, color: 'bg-green-200' }
+        ];
+        
+        notes = defaultNotes;
+        renderAllNotes();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
