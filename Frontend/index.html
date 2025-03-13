@@ -688,7 +688,11 @@
         Añadir Plan
       </button>
     </header>
-
+    <div id="costSummary" style="font-weight:bold; margin-bottom:1rem;">
+      Presupuesto Total: $0.00
+    </div>
+   
+  
     <div id="board" class="board">
       <!-- Las notas se añadirán dinámicamente aquí -->
     </div>
@@ -724,6 +728,31 @@
             <option value="other">📌 Otro</option>
           </select>
         </div>
+        <div class="form-group">
+          <label for="noteCost" class="form-label">Costo Aproximado</label>
+          <input type="number" step="0.01" id="noteCost" class="input" placeholder="Ej: 150.00">
+        </div>
+        
+        <div class="form-group">
+          <label for="noteStartDate" class="form-label">Fecha/Hora de Inicio</label>
+          <input type="datetime-local" id="noteStartDate" class="input">
+        </div>
+        
+        <div class="form-group">
+          <label for="noteEndDate" class="form-label">Fecha/Hora de Fin</label>
+          <input type="datetime-local" id="noteEndDate" class="input">
+        </div>
+        
+        <div class="form-group">
+          <label for="noteLat" class="form-label">Latitud (opcional)</label>
+          <input type="number" step="0.000001" id="noteLat" class="input">
+        </div>
+        
+        <div class="form-group">
+          <label for="noteLng" class="form-label">Longitud (opcional)</label>
+          <input type="number" step="0.000001" id="noteLng" class="input">
+        </div>
+        
       </div>
       <div class="modal-footer">
         <div class="keyboard-hint">Presiona Ctrl+Enter para guardar</div>
@@ -754,6 +783,30 @@
   </button>
 
   <script>
+async function exportICS(noteId) {
+  try {
+    const response = await fetch(`https://backend-devnotess.onrender.com/export/ical/${noteId}`);
+    if (!response.ok) {
+      throw new Error('Error al generar ICS');
+    }
+    const icsBlob = await response.blob();
+
+    const url = URL.createObjectURL(icsBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `plan-${noteId}.ics`;  // Nombre del archivo
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo descargar el archivo ICS.');
+  }
+}
+
+
     // DOM Elements
     const board = document.getElementById('board');
     const noteModal = document.getElementById('noteModal');
@@ -800,6 +853,16 @@
       connectionStatus.classList.add('status-connected');
     });
 
+    // Luego de tu socket.on('connect', ...):
+socket.on('totalCost', total => {
+  // Muestra en algún lugar de tu UI
+  const costSummary = document.getElementById('costSummary');
+  if (costSummary) {
+    costSummary.textContent = `Presupuesto Total: $${total.toFixed(2)}`;
+  }
+});
+
+
     socket.on('disconnect', () => {
       connectionStatus.textContent = 'Desconectado';
       connectionStatus.classList.remove('status-connected');
@@ -822,6 +885,13 @@
       renderAllNotes();
     });
 
+
+
+    if ('Notification' in window) {
+  Notification.requestPermission().then((result) => {
+    console.log('Permiso notificaciones:', result); // 'granted', 'denied', 'default'
+  });
+}
     socket.on('newNote', note => {
       const newNote = {
         ...note,
@@ -835,7 +905,15 @@
       notes.push(newNote);
       renderNote(newNote);
       highestZIndex = Math.max(highestZIndex, newNote.zIndex);
+      
+    // Disparas notificación
+  if (Notification.permission === 'granted') {
+    new Notification('Nueva nota agregada!', {
+      body: `Título: ${note.title || 'Sin título'}`,
+      icon: 'https://cdn-icons-png.flaticon.com/512/2026/2026428.png' // ícono de ejemplo
     });
+  }
+});
 
     socket.on('updateNote', updatedNote => {
       notes = notes.map(note => 
@@ -904,12 +982,71 @@
     }
 
     function renderNote(note) {
-      // Check if note already exists
-      const existingNote = document.getElementById(`note-${note.id}`);
-      if (existingNote) {
-        updateNoteElement(note);
-        return;
-      }
+  // Si la nota ya existe, solo la actualizamos
+  const existingNote = document.getElementById(`note-${note.id}`);
+  if (existingNote) {
+    updateNoteElement(note);
+    return;
+  }
+
+  // -----------------------
+  // CREAR la nota (nuevo elemento DIV)
+  // -----------------------
+  const noteElement = document.createElement('div');
+  noteElement.id = `note-${note.id}`;
+  noteElement.className = `note ${note.color || 'category-other'}`;
+  noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
+  noteElement.style.zIndex = note.zIndex || 1;
+
+  // Cabecera con el botón ICS
+  const headerHTML = `
+    <div class="note-header">
+      <div class="note-header-left">
+        <svg class="icon icon-sm" viewBox="0 0 24 24">
+          <line x1="4" y1="9" x2="20" y2="9"></line>
+          <line x1="4" y1="15" x2="20" y2="15"></line>
+        </svg>
+        <span class="note-title">${note.title || ''}</span>
+      </div>
+      <div class="note-actions">
+        <!-- Botones de categoría, editar, etc. -->
+
+        <!-- Botón de Exportar ICS -->
+        <button class="btn btn-icon btn-ghost export-ics-btn" title="Exportar a Calendario">
+          <svg class="icon icon-sm" viewBox="0 0 24 24">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 
+              2 0 0 0-2 2v14a2 2 0 0 0 2 
+              2h14a2 2 0 0 0 2-2V5a2 2 
+              0 0 0-2-2zm0 16H5V8h14z"></path>
+          </svg>
+        </button>
+
+        <!-- Botón de minimizar, eliminar, etc. -->
+      </div>
+    </div>
+    <div class="category-picker hidden"></div>
+  `;
+
+  noteElement.innerHTML = headerHTML;
+  // Aquí añades el resto de tu contenido (si la nota no está minimizada, etc.)
+
+  // -----------------------
+  // AÑADIR noteElement al board
+  // -----------------------
+  board.appendChild(noteElement);
+
+  // -----------------------
+  // CONFIGURAR EVENTOS
+  // -----------------------
+  // 1) Lógica existente (edit, delete, etc.)
+  setupNoteEvents(noteElement, note.id);
+
+  // 2) Evento para exportar ICS
+  noteElement.querySelector('.export-ics-btn').addEventListener('click', () => {
+    exportICS(note.id); // Llamar a la función que hace fetch y descarga
+  });
+}
+
 
       // Create note element
       const noteElement = document.createElement('div');
@@ -1022,7 +1159,7 @@
       
       // Set up event handlers
       setupNoteEvents(noteElement, note.id);
-    }
+    
 
     function updateNoteElement(note) {
       const noteElement = document.getElementById(`note-${note.id}`);
@@ -1309,17 +1446,24 @@
     }
 
     function editNote(noteId) {
-      const note = notes.find(n => n.id === noteId);
-      if (!note) return;
-      
-      activeNoteId = noteId;
-      modalTitle.textContent = 'Editar Plan';
-      noteTitle.value = note.title || '';
-      noteContent.value = note.content || '';
-      noteLink.value = note.link || '';
-      noteCategory.value = note.category || 'other';
-      openModal();
-    }
+  const note = notes.find(n => n.id === noteId);
+  if (!note) return;
+
+  activeNoteId = noteId;
+  modalTitle.textContent = 'Editar Plan';
+  noteTitle.value         = note.title     || '';
+  noteContent.value       = note.content   || '';
+  noteLink.value          = note.link      || '';
+  noteCategory.value      = note.category  || 'other';
+  noteCost.value          = note.cost      || 0;
+  noteStartDate.value     = note.startDate || '';
+  noteEndDate.value       = note.endDate   || '';
+  noteLat.value           = note.lat       || '';
+  noteLng.value           = note.lng       || '';
+
+  openModal();
+}
+
 
     function deleteNote(noteId) {
       socket.emit('deleteNote', noteId);
@@ -1353,45 +1497,55 @@
     }
 
     function saveNote() {
-      if (!activeNoteId) return;
-      
-      const title = noteTitle.value.trim();
-      const content = noteContent.value.trim();
-      const link = noteLink.value.trim();
-      const category = noteCategory.value;
-      
-      if (!title && !content) return;
-      
-      const existingNote = notes.find(n => n.id === activeNoteId);
-      
-      if (existingNote) {
-        // Update existing note
-        existingNote.title = title;
-        existingNote.content = content;
-        existingNote.link = link;
-        existingNote.category = category;
-        existingNote.color = getCategoryClass(category);
-        socket.emit('updateNote', existingNote);
-      } else {
-        // Create new note
-        const newZIndex = highestZIndex + 1;
-        const newNote = {
-          id: activeNoteId,
-          title: title,
-          content: content,
-          link: link,
-          category: category,
-          color: getCategoryClass(category),
-          x: Math.random() * (board.clientWidth * 0.6) + 50,
-          y: Math.random() * (board.clientHeight * 0.5) + 50,
-          zIndex: newZIndex
-        };
-        socket.emit('newNote', newNote);
-        highestZIndex = newZIndex;
-      }
-      
-      closeModal();
-    }
+  if (!activeNoteId) return;
+
+  const title     = noteTitle.value.trim();
+  const content   = noteContent.value.trim();
+  const link      = noteLink.value.trim();
+  const category  = noteCategory.value;
+  const cost      = parseFloat(noteCost.value) || 0;
+  const startDate = noteStartDate.value; // Devuelve algo tipo '2023-07-20T10:00'
+  const endDate   = noteEndDate.value;
+  const lat       = parseFloat(noteLat.value) || null;
+  const lng       = parseFloat(noteLng.value) || null;
+
+
+
+  if (existingNote) {
+    existingNote.title     = title;
+    existingNote.content   = content;
+    existingNote.link      = link;
+    existingNote.category  = category;
+    existingNote.cost      = cost;
+    existingNote.startDate = startDate;
+    existingNote.endDate   = endDate;
+    existingNote.lat       = lat;
+    existingNote.lng       = lng;
+    socket.emit('updateNote', existingNote);
+  } else {
+    const newZIndex = highestZIndex + 1;
+    const newNote = {
+      id: activeNoteId,
+      title,
+      content,
+      link,
+      category,
+      cost,
+      startDate,
+      endDate,
+      lat,
+      lng,
+      x: Math.random() * (board.clientWidth * 0.6) + 50,
+      y: Math.random() * (board.clientHeight * 0.5) + 50,
+      zIndex: newZIndex
+    };
+    socket.emit('newNote', newNote);
+    highestZIndex = newZIndex;
+  }
+
+  closeModal();
+}
+
 
     function openModal() {
       noteModal.classList.add('active');
