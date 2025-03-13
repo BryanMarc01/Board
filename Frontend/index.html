@@ -108,7 +108,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
       flex-wrap: wrap;
       gap: 1rem;
     }
@@ -214,7 +214,7 @@
     .board {
       position: relative;
       width: 100%;
-      min-height: calc(100vh - 8rem);
+      min-height: calc(100vh - 10rem);
       background-color: var(--board-bg);
       border-radius: var(--radius-xl);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -257,10 +257,10 @@
     }
 
     .note-title {
-      font-size: 0.75rem;
-      font-weight: 500;
+      font-size: 0.875rem;
+      font-weight: 600;
       color: var(--slate-700);
-      max-width: 120px;
+      max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -429,6 +429,86 @@
       margin-top: 0.5rem;
     }
 
+    .cost-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--slate-700);
+      margin-right: 0.5rem;
+    }
+
+    .dark .cost-badge {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--slate-300);
+    }
+
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--slate-700);
+    }
+
+    .dark .date-badge {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--slate-300);
+    }
+
+    .vote-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .vote-btn {
+      display: flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-md);
+      font-size: 0.75rem;
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--slate-700);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .vote-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .vote-btn.voted {
+      background-color: var(--blue-500);
+      color: white;
+    }
+
+    .dark .vote-btn {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--slate-300);
+    }
+
+    .dark .vote-btn:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .dark .vote-btn.voted {
+      background-color: var(--blue-500);
+      color: white;
+    }
+
+    .vote-count {
+      margin-left: 0.25rem;
+    }
+
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -459,6 +539,8 @@
       transform: scale(0.95);
       opacity: 0;
       transition: transform 0.3s ease, opacity 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .dark .modal-content {
@@ -474,10 +556,15 @@
     .modal-header {
       padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--slate-200);
+      position: sticky;
+      top: 0;
+      background-color: var(--white);
+      z-index: 1;
     }
 
     .dark .modal-header {
       border-color: var(--slate-800);
+      background-color: var(--slate-900);
     }
 
     .modal-title {
@@ -500,10 +587,15 @@
       justify-content: space-between;
       align-items: center;
       border-top: 1px solid var(--slate-200);
+      position: sticky;
+      bottom: 0;
+      background-color: var(--white);
+      z-index: 1;
     }
 
     .dark .modal-footer {
       border-color: var(--slate-800);
+      background-color: var(--slate-900);
     }
 
     .form-group {
@@ -641,6 +733,72 @@
       border-color: var(--other-border);
     }
 
+    /* Presupuesto total */
+    .budget-summary {
+      background-color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--slate-200);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dark .budget-summary {
+      background-color: var(--slate-800);
+      border-color: var(--slate-700);
+    }
+
+    .budget-amount {
+      color: var(--blue-500);
+    }
+
+    /* Filtros */
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background-color: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-full);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      background-color: var(--slate-100);
+    }
+
+    .filter-btn.active {
+      background-color: var(--blue-500);
+      color: white;
+      border-color: var(--blue-500);
+    }
+
+    .dark .filter-btn {
+      background-color: var(--slate-800);
+      border-color: var(--slate-700);
+    }
+
+    .dark .filter-btn:hover {
+      background-color: var(--slate-700);
+    }
+
+    .dark .filter-btn.active {
+      background-color: var(--blue-500);
+      color: white;
+      border-color: var(--blue-500);
+    }
+
     /* Responsive styles */
     @media (max-width: 640px) {
       header {
@@ -688,11 +846,22 @@
         Añadir Plan
       </button>
     </header>
-    <div id="costSummary" style="font-weight:bold; margin-bottom:1rem;">
-      Presupuesto Total: $0.00
+
+    <div id="budgetSummary" class="budget-summary">
+      <span>Presupuesto Total:</span>
+      <span class="budget-amount">$0.00</span>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-category="all">Todos</button>
+      <button class="filter-btn" data-category="restaurant">🍽️ Restaurantes</button>
+      <button class="filter-btn" data-category="lodging">🏠 Alojamientos</button>
+      <button class="filter-btn" data-category="activity">🎯 Actividades</button>
+      <button class="filter-btn" data-category="nightlife">🌃 Vida nocturna</button>
+      <button class="filter-btn" data-category="beach">🏖️ Playas</button>
+      <button class="filter-btn" data-category="other">📌 Otros</button>
     </div>
    
-  
     <div id="board" class="board">
       <!-- Las notas se añadirán dinámicamente aquí -->
     </div>
@@ -729,7 +898,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="noteCost" class="form-label">Costo Aproximado</label>
+          <label for="noteCost" class="form-label">Costo Aproximado ($)</label>
           <input type="number" step="0.01" id="noteCost" class="input" placeholder="Ej: 150.00">
         </div>
         
@@ -744,15 +913,23 @@
         </div>
         
         <div class="form-group">
+          <label for="notePriority" class="form-label">Prioridad</label>
+          <select id="notePriority" class="select">
+            <option value="normal">Normal</option>
+            <option value="high">⭐ Alta (Imprescindible)</option>
+            <option value="low">⬇️ Baja (Opcional)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
           <label for="noteLat" class="form-label">Latitud (opcional)</label>
-          <input type="number" step="0.000001" id="noteLat" class="input">
+          <input type="number" step="0.000001" id="noteLat" class="input" placeholder="Ej: 40.416775">
         </div>
         
         <div class="form-group">
           <label for="noteLng" class="form-label">Longitud (opcional)</label>
-          <input type="number" step="0.000001" id="noteLng" class="input">
+          <input type="number" step="0.000001" id="noteLng" class="input" placeholder="Ej: -3.703790">
         </div>
-        
       </div>
       <div class="modal-footer">
         <div class="keyboard-hint">Presiona Ctrl+Enter para guardar</div>
@@ -783,30 +960,6 @@
   </button>
 
   <script>
-async function exportICS(noteId) {
-  try {
-    const response = await fetch(`https://backend-devnotess.onrender.com/export/ical/${noteId}`);
-    if (!response.ok) {
-      throw new Error('Error al generar ICS');
-    }
-    const icsBlob = await response.blob();
-
-    const url = URL.createObjectURL(icsBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `plan-${noteId}.ics`;  // Nombre del archivo
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error(err);
-    alert('No se pudo descargar el archivo ICS.');
-  }
-}
-
-
     // DOM Elements
     const board = document.getElementById('board');
     const noteModal = document.getElementById('noteModal');
@@ -815,6 +968,12 @@ async function exportICS(noteId) {
     const noteContent = document.getElementById('noteContent');
     const noteLink = document.getElementById('noteLink');
     const noteCategory = document.getElementById('noteCategory');
+    const noteCost = document.getElementById('noteCost');
+    const noteStartDate = document.getElementById('noteStartDate');
+    const noteEndDate = document.getElementById('noteEndDate');
+    const notePriority = document.getElementById('notePriority');
+    const noteLat = document.getElementById('noteLat');
+    const noteLng = document.getElementById('noteLng');
     const addNoteBtn = document.getElementById('addNoteBtn');
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -822,6 +981,8 @@ async function exportICS(noteId) {
     const themeToggle = document.getElementById('themeToggle');
     const sunIcon = document.getElementById('sunIcon');
     const moonIcon = document.getElementById('moonIcon');
+    const budgetSummary = document.getElementById('budgetSummary');
+    const filterButtons = document.querySelectorAll('.filter-btn');
 
     // Application State
     let notes = [];
@@ -831,6 +992,8 @@ async function exportICS(noteId) {
     let dragOffset = { x: 0, y: 0 };
     let highestZIndex = 1;
     let showCategoryPicker = null;
+    let activeFilter = 'all';
+    let totalBudget = 0;
 
     // Categorías disponibles
     const categories = [
@@ -853,16 +1016,6 @@ async function exportICS(noteId) {
       connectionStatus.classList.add('status-connected');
     });
 
-    // Luego de tu socket.on('connect', ...):
-socket.on('totalCost', total => {
-  // Muestra en algún lugar de tu UI
-  const costSummary = document.getElementById('costSummary');
-  if (costSummary) {
-    costSummary.textContent = `Presupuesto Total: $${total.toFixed(2)}`;
-  }
-});
-
-
     socket.on('disconnect', () => {
       connectionStatus.textContent = 'Desconectado';
       connectionStatus.classList.remove('status-connected');
@@ -877,21 +1030,32 @@ socket.on('totalCost', total => {
         category: note.category || 'other',
         color: getCategoryClass(note.category || 'other'),
         zIndex: note.zIndex || 1,
-        minimized: note.minimized || false
+        minimized: note.minimized || false,
+        cost: note.cost || 0,
+        startDate: note.startDate || '',
+        endDate: note.endDate || '',
+        priority: note.priority || 'normal',
+        lat: note.lat || null,
+        lng: note.lng || null,
+        votes: note.votes || 0,
+        userVoted: note.userVoted || false
       }));
       
       // Find highest z-index
       highestZIndex = Math.max(...notes.map(n => n.zIndex || 1), 1);
+      
+      // Calculate total budget
+      updateTotalBudget();
+      
+      // Render notes
       renderAllNotes();
     });
 
+    socket.on('totalCost', total => {
+      totalBudget = total;
+      updateBudgetDisplay();
+    });
 
-
-    if ('Notification' in window) {
-  Notification.requestPermission().then((result) => {
-    console.log('Permiso notificaciones:', result); // 'granted', 'denied', 'default'
-  });
-}
     socket.on('newNote', note => {
       const newNote = {
         ...note,
@@ -900,22 +1064,41 @@ socket.on('totalCost', total => {
         category: note.category || 'other',
         color: getCategoryClass(note.category || 'other'),
         zIndex: note.zIndex || highestZIndex + 1,
-        minimized: note.minimized || false
+        minimized: note.minimized || false,
+        cost: note.cost || 0,
+        startDate: note.startDate || '',
+        endDate: note.endDate || '',
+        priority: note.priority || 'normal',
+        lat: note.lat || null,
+        lng: note.lng || null,
+        votes: note.votes || 0,
+        userVoted: note.userVoted || false
       };
+      
       notes.push(newNote);
-      renderNote(newNote);
       highestZIndex = Math.max(highestZIndex, newNote.zIndex);
       
-    // Disparas notificación
-  if (Notification.permission === 'granted') {
-    new Notification('Nueva nota agregada!', {
-      body: `Título: ${note.title || 'Sin título'}`,
-      icon: 'https://cdn-icons-png.flaticon.com/512/2026/2026428.png' // ícono de ejemplo
+      // Update total budget
+      updateTotalBudget();
+      
+      // Only render if it matches the current filter
+      if (activeFilter === 'all' || newNote.category === activeFilter) {
+        renderNote(newNote);
+      }
+      
+      // Show notification
+      if (Notification.permission === 'granted') {
+        new Notification('Nuevo plan agregado!', {
+          body: `${newNote.title || 'Sin título'}`,
+          icon: 'https://cdn-icons-png.flaticon.com/512/2026/2026428.png'
+        });
+      }
     });
-  }
-});
 
     socket.on('updateNote', updatedNote => {
+      const oldNote = notes.find(n => n.id === updatedNote.id);
+      const oldCost = oldNote ? oldNote.cost || 0 : 0;
+      
       notes = notes.map(note => 
         note.id === updatedNote.id ? {
           ...updatedNote,
@@ -924,11 +1107,36 @@ socket.on('totalCost', total => {
           category: updatedNote.category || 'other',
           color: getCategoryClass(updatedNote.category || 'other'),
           zIndex: updatedNote.zIndex || note.zIndex,
-          minimized: updatedNote.minimized !== undefined ? updatedNote.minimized : note.minimized
+          minimized: updatedNote.minimized !== undefined ? updatedNote.minimized : note.minimized,
+          cost: updatedNote.cost || 0,
+          startDate: updatedNote.startDate || '',
+          endDate: updatedNote.endDate || '',
+          priority: updatedNote.priority || 'normal',
+          lat: updatedNote.lat || null,
+          lng: updatedNote.lng || null,
+          votes: updatedNote.votes || note.votes || 0,
+          userVoted: updatedNote.userVoted !== undefined ? updatedNote.userVoted : note.userVoted || false
         } : note
       );
       
-      updateNoteElement(updatedNote);
+      // Update total budget if cost changed
+      if (oldCost !== (updatedNote.cost || 0)) {
+        updateTotalBudget();
+      }
+      
+      // Update note in DOM if it exists and matches filter
+      const noteElement = document.getElementById(`note-${updatedNote.id}`);
+      if (noteElement) {
+        if (activeFilter === 'all' || updatedNote.category === activeFilter) {
+          updateNoteElement(updatedNote);
+        } else {
+          // Remove note if it no longer matches the filter
+          noteElement.remove();
+        }
+      } else if (activeFilter === 'all' || updatedNote.category === activeFilter) {
+        // Add note to DOM if it now matches the filter
+        renderNote(updatedNote);
+      }
       
       if (updatedNote.zIndex && updatedNote.zIndex > highestZIndex) {
         highestZIndex = updatedNote.zIndex;
@@ -936,7 +1144,15 @@ socket.on('totalCost', total => {
     });
 
     socket.on('deleteNote', noteId => {
+      const deletedNote = notes.find(n => n.id === noteId);
       notes = notes.filter(note => note.id !== noteId);
+      
+      // Update total budget if the deleted note had a cost
+      if (deletedNote && deletedNote.cost) {
+        updateTotalBudget();
+      }
+      
+      // Remove from DOM
       const noteElement = document.getElementById(`note-${noteId}`);
       if (noteElement) noteElement.remove();
     });
@@ -975,113 +1191,207 @@ socket.on('totalCost', total => {
       }
     }
 
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function updateTotalBudget() {
+      totalBudget = notes.reduce((sum, note) => sum + (parseFloat(note.cost) || 0), 0);
+      updateBudgetDisplay();
+    }
+
+    function updateBudgetDisplay() {
+      const budgetAmount = budgetSummary.querySelector('.budget-amount');
+      budgetAmount.textContent = `$${totalBudget.toFixed(2)}`;
+    }
+
     // Functions to handle notes
     function renderAllNotes() {
       board.innerHTML = '';
-      notes.forEach(renderNote);
+      notes
+        .filter(note => activeFilter === 'all' || note.category === activeFilter)
+        .forEach(renderNote);
     }
 
     function renderNote(note) {
-  // 1) Verificar si la nota ya existe en el DOM
-  const existingNote = document.getElementById(`note-${note.id}`);
-  if (existingNote) {
-    // Si existe, la actualizamos y salimos
-    updateNoteElement(note);
-    return;
-  }
+      // Check if note already exists
+      const existingNote = document.getElementById(`note-${note.id}`);
+      if (existingNote) {
+        updateNoteElement(note);
+        return;
+      }
 
-  // 2) CREAR la nota (nuevo elemento DIV)
-  const noteElement = document.createElement('div');
-  noteElement.id = `note-${note.id}`;
-  noteElement.className = `note ${note.color || 'category-other'}`;
-  noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
-  noteElement.style.zIndex = note.zIndex || 1;
-
-  // 3) Cabecera y contenido HTML (botones, categoría, etc.)
-  // --- Pega aquí tu HTML (headerHTML, etc.) ---
-  const headerHTML = `
-    <div class="note-actions">
-  <!-- Botón de cambiar categoría -->
-  <button class="btn btn-icon btn-ghost category-btn" title="Cambiar categoría">
-    <svg class="icon icon-sm" viewBox="0 0 24 24">
-      <!-- icono de categoría -->
-      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-      <line x1="7" y1="7" x2="7.01" y2="7"></line>
-    </svg>
-  </button>
-<div class="category-picker hidden"></div>
-  <!-- Botón de editar -->
-  <button class="btn btn-icon btn-ghost edit-btn" title="Editar plan">
-    <svg class="icon icon-sm" viewBox="0 0 24 24">
-      <!-- icono de lápiz, etc. -->
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 
-      2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 
-      1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  </button>
-
-  <!-- Botón de minimizar -->
-  <button class="btn btn-icon btn-ghost minimize-btn" title="Minimizar">
-    <svg class="icon icon-sm" viewBox="0 0 24 24">
-      <!-- icono de minimizar/maximizar -->
-      <polyline points="8 3 18 3 18 13"></polyline>
-      <polyline points="16 8 21 3 16 8"></polyline>
-      <line x1="10" y1="14" x2="21" y2="3"></line>
-    </svg>
-  </button>
-
-  <!-- Botón de eliminar -->
-  <button class="btn btn-icon btn-ghost btn-danger delete-btn" title="Eliminar plan">
-    <svg class="icon icon-sm" viewBox="0 0 24 24">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 
-      2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 
-      2-2h4a2 2 0 0 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" 
-      y2="17" />
-      <line x1="14" y1="11" x2="14" 
-      y2="17" />
-    </svg>
-  </button>
-
-  <!-- Botón de Exportar ICS -->
-  <button class="btn btn-icon btn-ghost export-ics-btn" title="Exportar a Calendario">
-    <!-- icono de calendario -->
-    <svg class="icon icon-sm" viewBox="0 0 24 24">
-      <path d="M19 3h-1V1h-2v2H8V1H6v2H5
-      a2 2 0 0 0-2 2v14a2 2 0 0 0 2 
-      2h14a2 2 0 0 0 2-2V5a2 2 
-      0 0 0-2-2zm0 16H5V8h14z"/>
-    </svg>
-  </button>
-</div>
-
-  `;
-  noteElement.innerHTML = headerHTML;
-
-  // 4) Si NO está minimizada, crea el contenido principal
-  if (!note.minimized) {
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'note-content';
-    contentDiv.textContent = note.content;
-
-    // Link, vista previa, categoría, etc.
-    // ...
-    noteElement.appendChild(contentDiv);
-  }
-
-  // 5) Añadir la nota al contenedor
-  board.appendChild(noteElement);
-
-  // 6) Configurar el category-picker, eventos, etc.
-  setupNoteEvents(noteElement, note.id);
-  noteElement.querySelector('.export-ics-btn').addEventListener('click', () => {
-    exportICS(note.id);
-  });
-}
-
-
+      // Create note element
+      const noteElement = document.createElement('div');
+      noteElement.id = `note-${note.id}`;
+      noteElement.className = `note ${note.color || 'category-other'}`;
+      noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
+      noteElement.style.zIndex = note.zIndex || 1;
+      
+      // Add priority indicator
+      if (note.priority === 'high') {
+        noteElement.style.boxShadow = '0 0 0 2px #f59e0b, 0 2px 8px var(--note-shadow)';
+      } else if (note.priority === 'low') {
+        noteElement.style.opacity = '0.8';
+      }
+      
+      // Note header with title and actions
+      const headerHTML = `
+        <div class="note-header">
+          <div class="note-header-left">
+            <svg class="icon icon-sm" viewBox="0 0 24 24">
+              <line x1="4" y1="9" x2="20" y2="9"></line>
+              <line x1="4" y1="15" x2="20" y2="15"></line>
+            </svg>
+            <span class="note-title">${note.title || extractTitle(note.content)}</span>
+          </div>
+          <div class="note-actions">
+            <button class="btn btn-icon btn-ghost category-btn" title="Cambiar categoría">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+            </button>
+            <button class="btn btn-icon btn-ghost edit-btn" title="Editar plan">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button class="btn btn-icon btn-ghost minimize-btn" title="${note.minimized ? 'Maximizar' : 'Minimizar'}">
+              <svg class="icon icon-sm ${note.minimized ? 'hidden' : ''}" viewBox="0 0 24 24">
+                <polyline points="8 3 18 3 18 13"></polyline>
+                <polyline points="16 8 21 3 16 8"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <svg class="icon icon-sm ${note.minimized ? '' : 'hidden'}" viewBox="0 0 24 24">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </button>
+            <button class="btn btn-icon btn-ghost export-ics-btn" title="Exportar a Calendario">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+            <button class="btn btn-icon btn-ghost btn-danger delete-btn" title="Eliminar plan">
+              <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="category-picker hidden"></div>
+      `;
+      
+      noteElement.innerHTML = headerHTML;
+      
+      // Add note content if not minimized
+      if (!note.minimized) {
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'note-content';
+        
+        // Contenido principal
+        contentDiv.textContent = note.content;
+        
+        // Añadir enlace si existe
+        if (note.link) {
+          const linkElement = document.createElement('a');
+          linkElement.href = note.link;
+          linkElement.className = 'note-link';
+          linkElement.textContent = note.link;
+          linkElement.target = '_blank';
+          linkElement.rel = 'noopener noreferrer';
+          contentDiv.appendChild(linkElement);
+          
+          // Intentar crear una vista previa del enlace
+          createLinkPreview(note.link, contentDiv);
+        }
+        
+        // Añadir información de costo si existe
+        if (note.cost) {
+          const costBadge = document.createElement('div');
+          costBadge.className = 'cost-badge';
+          costBadge.innerHTML = `💰 $${parseFloat(note.cost).toFixed(2)}`;
+          contentDiv.appendChild(costBadge);
+        }
+        
+        // Añadir información de fecha si existe
+        if (note.startDate) {
+          const dateBadge = document.createElement('div');
+          dateBadge.className = 'date-badge';
+          
+          if (note.endDate) {
+            dateBadge.innerHTML = `📅 ${formatDate(note.startDate)} - ${formatDate(note.endDate)}`;
+          } else {
+            dateBadge.innerHTML = `📅 ${formatDate(note.startDate)}`;
+          }
+          
+          contentDiv.appendChild(dateBadge);
+        }
+        
+        // Añadir badge de categoría
+        const categoryBadge = document.createElement('div');
+        categoryBadge.className = `category-badge ${note.color}`;
+        categoryBadge.textContent = getCategoryLabel(note.category);
+        contentDiv.appendChild(categoryBadge);
+        
+        // Añadir botones de votación
+        const voteButtons = document.createElement('div');
+        voteButtons.className = 'vote-buttons';
+        voteButtons.innerHTML = `
+          <button class="vote-btn ${note.userVoted ? 'voted' : ''}" data-note-id="${note.id}">
+            👍 <span class="vote-count">${note.votes || 0}</span>
+          </button>
+        `;
+        contentDiv.appendChild(voteButtons);
+        
+        noteElement.appendChild(contentDiv);
+      }
+      
+      board.appendChild(noteElement);
+      
+      // Set up category picker
+      const categoryPicker = noteElement.querySelector('.category-picker');
+      categories.forEach(category => {
+        const categoryOption = document.createElement('div');
+        categoryOption.className = 'category-option';
+        categoryOption.innerHTML = `
+          <div class="category-color ${category.class}"></div>
+          <div class="category-label">${category.label}</div>
+        `;
+        
+        categoryOption.addEventListener('click', () => {
+          changeNoteCategory(note.id, category.value);
+          categoryPicker.classList.add('hidden');
+        });
+        
+        categoryPicker.appendChild(categoryOption);
+      });
+      
+      // Set up event handlers
+      setupNoteEvents(noteElement, note.id);
+    }
 
     function updateNoteElement(note) {
       const noteElement = document.getElementById(`note-${note.id}`);
@@ -1090,6 +1400,16 @@ socket.on('totalCost', total => {
       // Update position and z-index
       noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
       noteElement.style.zIndex = note.zIndex || 1;
+      
+      // Update priority indicator
+      if (note.priority === 'high') {
+        noteElement.style.boxShadow = '0 0 0 2px #f59e0b, 0 2px 8px var(--note-shadow)';
+      } else if (note.priority === 'low') {
+        noteElement.style.opacity = '0.8';
+      } else {
+        noteElement.style.boxShadow = '0 2px 8px var(--note-shadow)';
+        noteElement.style.opacity = '1';
+      }
       
       // Update title
       const titleElement = noteElement.querySelector('.note-title');
@@ -1138,11 +1458,43 @@ socket.on('totalCost', total => {
             createLinkPreview(note.link, contentDiv);
           }
           
+          // Añadir información de costo si existe
+          if (note.cost) {
+            const costBadge = document.createElement('div');
+            costBadge.className = 'cost-badge';
+            costBadge.innerHTML = `💰 $${parseFloat(note.cost).toFixed(2)}`;
+            contentDiv.appendChild(costBadge);
+          }
+          
+          // Añadir información de fecha si existe
+          if (note.startDate) {
+            const dateBadge = document.createElement('div');
+            dateBadge.className = 'date-badge';
+            
+            if (note.endDate) {
+              dateBadge.innerHTML = `📅 ${formatDate(note.startDate)} - ${formatDate(note.endDate)}`;
+            } else {
+              dateBadge.innerHTML = `📅 ${formatDate(note.startDate)}`;
+            }
+            
+            contentDiv.appendChild(dateBadge);
+          }
+          
           // Añadir badge de categoría
           const categoryBadge = document.createElement('div');
           categoryBadge.className = `category-badge ${note.color}`;
           categoryBadge.textContent = getCategoryLabel(note.category);
           contentDiv.appendChild(categoryBadge);
+          
+          // Añadir botones de votación
+          const voteButtons = document.createElement('div');
+          voteButtons.className = 'vote-buttons';
+          voteButtons.innerHTML = `
+            <button class="vote-btn ${note.userVoted ? 'voted' : ''}" data-note-id="${note.id}">
+              👍 <span class="vote-count">${note.votes || 0}</span>
+            </button>
+          `;
+          contentDiv.appendChild(voteButtons);
           
           noteElement.appendChild(contentDiv);
         } else {
@@ -1171,6 +1523,37 @@ socket.on('totalCost', total => {
             if (previewElement) previewElement.remove();
           }
           
+          // Actualizar información de costo
+          let costBadge = contentElement.querySelector('.cost-badge');
+          if (note.cost) {
+            if (!costBadge) {
+              costBadge = document.createElement('div');
+              costBadge.className = 'cost-badge';
+              contentElement.appendChild(costBadge);
+            }
+            costBadge.innerHTML = `💰 $${parseFloat(note.cost).toFixed(2)}`;
+          } else if (costBadge) {
+            costBadge.remove();
+          }
+          
+          // Actualizar información de fecha
+          let dateBadge = contentElement.querySelector('.date-badge');
+          if (note.startDate) {
+            if (!dateBadge) {
+              dateBadge = document.createElement('div');
+              dateBadge.className = 'date-badge';
+              contentElement.appendChild(dateBadge);
+            }
+            
+            if (note.endDate) {
+              dateBadge.innerHTML = `📅 ${formatDate(note.startDate)} - ${formatDate(note.endDate)}`;
+            } else {
+              dateBadge.innerHTML = `📅 ${formatDate(note.startDate)}`;
+            }
+          } else if (dateBadge) {
+            dateBadge.remove();
+          }
+          
           // Actualizar badge de categoría
           let categoryBadge = contentElement.querySelector('.category-badge');
           if (!categoryBadge) {
@@ -1180,6 +1563,25 @@ socket.on('totalCost', total => {
           }
           categoryBadge.className = `category-badge ${note.color}`;
           categoryBadge.textContent = getCategoryLabel(note.category);
+          
+          // Actualizar botones de votación
+          let voteButtons = contentElement.querySelector('.vote-buttons');
+          if (!voteButtons) {
+            voteButtons = document.createElement('div');
+            voteButtons.className = 'vote-buttons';
+            contentElement.appendChild(voteButtons);
+          }
+          voteButtons.innerHTML = `
+            <button class="vote-btn ${note.userVoted ? 'voted' : ''}" data-note-id="${note.id}">
+              👍 <span class="vote-count">${note.votes || 0}</span>
+            </button>
+          `;
+          
+          // Configurar evento de votación
+          const voteBtn = voteButtons.querySelector('.vote-btn');
+          voteBtn.addEventListener('click', () => {
+            toggleVote(note.id);
+          });
         }
       }
     }
@@ -1284,6 +1686,22 @@ socket.on('totalCost', total => {
         toggleMinimize(noteId);
       });
       
+      // Export to ICS button
+      noteElement.querySelector('.export-ics-btn').addEventListener('click', () => {
+        exportICS(noteId);
+      });
+      
+      // Vote button
+      const contentElement = noteElement.querySelector('.note-content');
+      if (contentElement) {
+        const voteBtn = contentElement.querySelector('.vote-btn');
+        if (voteBtn) {
+          voteBtn.addEventListener('click', () => {
+            toggleVote(noteId);
+          });
+        }
+      }
+      
       // Drag events
       noteElement.addEventListener('mousedown', (e) => {
         // Don't start drag if clicked on a button
@@ -1364,31 +1782,38 @@ socket.on('totalCost', total => {
       noteContent.value = '';
       noteLink.value = '';
       noteCategory.value = 'other';
+      noteCost.value = '';
+      noteStartDate.value = '';
+      noteEndDate.value = '';
+      notePriority.value = 'normal';
+      noteLat.value = '';
+      noteLng.value = '';
       openModal();
     }
 
     function editNote(noteId) {
-  const note = notes.find(n => n.id === noteId);
-  if (!note) return;
-
-  activeNoteId = noteId;
-  modalTitle.textContent = 'Editar Plan';
-  noteTitle.value         = note.title     || '';
-  noteContent.value       = note.content   || '';
-  noteLink.value          = note.link      || '';
-  noteCategory.value      = note.category  || 'other';
-  noteCost.value          = note.cost      || 0;
-  noteStartDate.value     = note.startDate || '';
-  noteEndDate.value       = note.endDate   || '';
-  noteLat.value           = note.lat       || '';
-  noteLng.value           = note.lng       || '';
-
-  openModal();
-}
-
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      activeNoteId = noteId;
+      modalTitle.textContent = 'Editar Plan';
+      noteTitle.value = note.title || '';
+      noteContent.value = note.content || '';
+      noteLink.value = note.link || '';
+      noteCategory.value = note.category || 'other';
+      noteCost.value = note.cost || '';
+      noteStartDate.value = note.startDate || '';
+      noteEndDate.value = note.endDate || '';
+      notePriority.value = note.priority || 'normal';
+      noteLat.value = note.lat || '';
+      noteLng.value = note.lng || '';
+      openModal();
+    }
 
     function deleteNote(noteId) {
-      socket.emit('deleteNote', noteId);
+      if (confirm('¿Estás seguro de que deseas eliminar este plan?')) {
+        socket.emit('deleteNote', noteId);
+      }
     }
 
     function changeNoteCategory(noteId, categoryValue) {
@@ -1408,6 +1833,19 @@ socket.on('totalCost', total => {
       socket.emit('updateNote', note);
     }
 
+    function toggleVote(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      const newVoteStatus = !note.userVoted;
+      const newVotes = newVoteStatus ? (note.votes || 0) + 1 : (note.votes || 0) - 1;
+      
+      note.userVoted = newVoteStatus;
+      note.votes = Math.max(0, newVotes);
+      
+      socket.emit('updateNote', note);
+    }
+
     function bringToFront(noteId) {
       const newZIndex = highestZIndex + 1;
       const note = notes.find(n => n.id === noteId);
@@ -1419,56 +1857,63 @@ socket.on('totalCost', total => {
     }
 
     function saveNote() {
-  if (!activeNoteId) return;
-
-  const title     = noteTitle.value.trim();
-  const content   = noteContent.value.trim();
-  const link      = noteLink.value.trim();
-  const category  = noteCategory.value;
-  const cost      = parseFloat(noteCost.value) || 0;
-  const startDate = noteStartDate.value; // Devuelve algo tipo '2023-07-20T10:00'
-  const endDate   = noteEndDate.value;
-  const lat       = parseFloat(noteLat.value) || null;
-  const lng       = parseFloat(noteLng.value) || null;
-
-
-  const existingNote = notes.find(n => n.id === activeNoteId);
-
-  if (existingNote) {
-    existingNote.title     = title;
-    existingNote.content   = content;
-    existingNote.link      = link;
-    existingNote.category  = category;
-    existingNote.cost      = cost;
-    existingNote.startDate = startDate;
-    existingNote.endDate   = endDate;
-    existingNote.lat       = lat;
-    existingNote.lng       = lng;
-    socket.emit('updateNote', existingNote);
-  } else {
-    const newZIndex = highestZIndex + 1;
-    const newNote = {
-      id: activeNoteId,
-      title,
-      content,
-      link,
-      category,
-      cost,
-      startDate,
-      endDate,
-      lat,
-      lng,
-      x: Math.random() * (board.clientWidth * 0.6) + 50,
-      y: Math.random() * (board.clientHeight * 0.5) + 50,
-      zIndex: newZIndex
-    };
-    socket.emit('newNote', newNote);
-    highestZIndex = newZIndex;
-  }
-
-  closeModal();
-}
-
+      if (!activeNoteId) return;
+      
+      const title = noteTitle.value.trim();
+      const content = noteContent.value.trim();
+      const link = noteLink.value.trim();
+      const category = noteCategory.value;
+      const cost = parseFloat(noteCost.value) || 0;
+      const startDate = noteStartDate.value;
+      const endDate = noteEndDate.value;
+      const priority = notePriority.value;
+      const lat = parseFloat(noteLat.value) || null;
+      const lng = parseFloat(noteLng.value) || null;
+      
+      if (!title && !content) return;
+      
+      const existingNote = notes.find(n => n.id === activeNoteId);
+      
+      if (existingNote) {
+        // Update existing note
+        existingNote.title = title;
+        existingNote.content = content;
+        existingNote.link = link;
+        existingNote.category = category;
+        existingNote.cost = cost;
+        existingNote.startDate = startDate;
+        existingNote.endDate = endDate;
+        existingNote.priority = priority;
+        existingNote.lat = lat;
+        existingNote.lng = lng;
+        socket.emit('updateNote', existingNote);
+      } else {
+        // Create new note
+        const newZIndex = highestZIndex + 1;
+        const newNote = {
+          id: activeNoteId,
+          title,
+          content,
+          link,
+          category,
+          cost,
+          startDate,
+          endDate,
+          priority,
+          lat,
+          lng,
+          x: Math.random() * (board.clientWidth * 0.6) + 50,
+          y: Math.random() * (board.clientHeight * 0.5) + 50,
+          zIndex: newZIndex,
+          votes: 0,
+          userVoted: false
+        };
+        socket.emit('newNote', newNote);
+        highestZIndex = newZIndex;
+      }
+      
+      closeModal();
+    }
 
     function openModal() {
       noteModal.classList.add('active');
@@ -1478,6 +1923,62 @@ socket.on('totalCost', total => {
     function closeModal() {
       noteModal.classList.remove('active');
       activeNoteId = null;
+    }
+
+    // Export to ICS
+    async function exportICS(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note || !note.startDate) {
+        alert('Este plan no tiene fecha asignada. Por favor, añade una fecha antes de exportar al calendario.');
+        return;
+      }
+      
+      try {
+        // Crear archivo ICS manualmente
+        let icsContent = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//Tablero de Planes//ES',
+          'CALSCALE:GREGORIAN',
+          'BEGIN:VEVENT',
+          `UID:${note.id}@tablero-planes`,
+          `SUMMARY:${note.title || 'Plan sin título'}`,
+          `DESCRIPTION:${note.content.replace(/\n/g, '\\n')}${note.link ? '\\n\\nEnlace: ' + note.link : ''}`,
+          `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+          `DTSTART:${new Date(note.startDate).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`
+        ];
+        
+        if (note.endDate) {
+          icsContent.push(`DTEND:${new Date(note.endDate).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+        }
+        
+        if (note.lat && note.lng) {
+          icsContent.push(`GEO:${note.lat};${note.lng}`);
+          icsContent.push(`LOCATION:${note.lat}, ${note.lng}`);
+        }
+        
+        icsContent = icsContent.concat([
+          'END:VEVENT',
+          'END:VCALENDAR'
+        ]);
+        
+        const icsData = icsContent.join('\r\n');
+        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `plan-${note.id}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert('Evento exportado al calendario correctamente.');
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo exportar el evento al calendario.');
+      }
     }
 
     // Toggle dark mode
@@ -1496,11 +1997,35 @@ socket.on('totalCost', total => {
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
+    // Filter notes
+    function filterNotes(category) {
+      activeFilter = category;
+      
+      // Update filter buttons
+      filterButtons.forEach(btn => {
+        if (btn.dataset.category === category) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      // Render filtered notes
+      renderAllNotes();
+    }
+
     // Set up event listeners
     addNoteBtn.addEventListener('click', addNote);
     saveNoteBtn.addEventListener('click', saveNote);
     cancelBtn.addEventListener('click', closeModal);
     themeToggle.addEventListener('click', toggleTheme);
+    
+    // Filter buttons
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterNotes(btn.dataset.category);
+      });
+    });
     
     // Close modal when clicking outside
     noteModal.addEventListener('click', (e) => {
@@ -1527,6 +2052,11 @@ socket.on('totalCost', total => {
       }
     });
 
+    // Request notification permission
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
+
     // Initialize theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -1545,10 +2075,15 @@ socket.on('totalCost', total => {
             content: 'Excelente restaurante de mariscos con vista al mar. Ideal para cenas románticas.',
             link: 'https://maps.google.com/example-restaurant',
             category: 'restaurant',
+            cost: 150,
+            startDate: '2023-07-20T20:00',
+            priority: 'normal',
             x: 100, 
             y: 100, 
             color: 'category-restaurant',
-            zIndex: 1
+            zIndex: 1,
+            votes: 2,
+            userVoted: false
           },
           { 
             id: '2', 
@@ -1556,10 +2091,16 @@ socket.on('totalCost', total => {
             content: 'Hermosa casa con piscina para 6 personas. Disponible del 15 al 22 de julio.',
             link: 'https://airbnb.com/example-house',
             category: 'lodging',
+            cost: 1200,
+            startDate: '2023-07-15T14:00',
+            endDate: '2023-07-22T11:00',
+            priority: 'high',
             x: 400, 
             y: 150, 
             color: 'category-lodging',
-            zIndex: 2
+            zIndex: 2,
+            votes: 3,
+            userVoted: true
           },
           { 
             id: '3', 
@@ -1567,15 +2108,24 @@ socket.on('totalCost', total => {
             content: 'Playa con aguas cristalinas y arena blanca. Ideal para snorkel.',
             link: 'https://maps.google.com/example-beach',
             category: 'beach',
+            cost: 0,
+            startDate: '2023-07-17T09:00',
+            endDate: '2023-07-17T18:00',
+            priority: 'normal',
+            lat: 20.6534,
+            lng: -87.0467,
             x: 200, 
             y: 300, 
             color: 'category-beach',
-            zIndex: 3
+            zIndex: 3,
+            votes: 1,
+            userVoted: false
           }
         ];
         
         notes = defaultNotes;
         highestZIndex = 3;
+        updateTotalBudget();
         renderAllNotes();
       }
     }, 1000);
