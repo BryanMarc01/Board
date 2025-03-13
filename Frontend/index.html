@@ -3,36 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📝 Sticky Notes with WebSockets</title>
+  <title>🌍 Tablero de Planes | Viajes y Salidas</title>
   <!-- Socket.io CDN -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <style>
     :root {
       --bg-gradient-from: #f8fafc;
-      --bg-gradient-to: #f1f5f9;
+      --bg-gradient-to: #e0f2fe;
       --board-bg: #ffffff;
       --board-border: #e2e8f0;
       --text-primary: #1e293b;
       --text-secondary: #64748b;
       --note-shadow: rgba(0, 0, 0, 0.1);
       --modal-overlay: rgba(0, 0, 0, 0.5);
-      --amber-100: #fef3c7;
-      --amber-300: #fcd34d;
-      --sky-100: #e0f2fe;
-      --sky-300: #7dd3fc;
-      --emerald-100: #d1fae5;
-      --emerald-300: #6ee7b7;
-      --rose-100: #ffe4e6;
-      --rose-300: #fda4af;
-      --violet-100: #ede9fe;
-      --violet-300: #c4b5fd;
-      --orange-100: #ffedd5;
-      --orange-300: #fdba74;
-      --green-100: #dcfce7;
-      --green-800: #166534;
-      --red-100: #fee2e2;
-      --red-500: #ef4444;
-      --red-800: #991b1b;
+      
+      /* Categorías de colores */
+      --restaurant-bg: #fee2e2;
+      --restaurant-border: #fca5a5;
+      --lodging-bg: #e0f2fe;
+      --lodging-border: #7dd3fc;
+      --activity-bg: #d1fae5;
+      --activity-border: #6ee7b7;
+      --nightlife-bg: #ede9fe;
+      --nightlife-border: #c4b5fd;
+      --beach-bg: #fef3c7;
+      --beach-border: #fcd34d;
+      --other-bg: #f3e8ff;
+      --other-border: #d8b4fe;
+      
       --white: #ffffff;
       --slate-50: #f8fafc;
       --slate-100: #f1f5f9;
@@ -45,6 +43,15 @@
       --slate-800: #1e293b;
       --slate-900: #0f172a;
       --slate-950: #020617;
+      
+      --green-100: #dcfce7;
+      --green-500: #22c55e;
+      --green-800: #166534;
+      --red-100: #fee2e2;
+      --red-500: #ef4444;
+      --red-800: #991b1b;
+      --blue-500: #3b82f6;
+      
       --radius-sm: 0.25rem;
       --radius-md: 0.375rem;
       --radius-lg: 0.5rem;
@@ -55,11 +62,25 @@
 
     .dark {
       --bg-gradient-from: #0f172a;
-      --bg-gradient-to: #1e293b;
+      --bg-gradient-to: #0c4a6e;
       --board-bg: #020617;
       --board-border: #1e293b;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
+      
+      /* Categorías de colores en modo oscuro */
+      --restaurant-bg: #7f1d1d;
+      --restaurant-border: #b91c1c;
+      --lodging-bg: #0c4a6e;
+      --lodging-border: #0369a1;
+      --activity-bg: #064e3b;
+      --activity-border: #047857;
+      --nightlife-bg: #4c1d95;
+      --nightlife-border: #6d28d9;
+      --beach-bg: #78350f;
+      --beach-border: #b45309;
+      --other-bg: #581c87;
+      --other-border: #7e22ce;
     }
 
     * {
@@ -137,13 +158,13 @@
     }
 
     .btn-primary {
-      background: linear-gradient(to right, #10b981, #14b8a6);
+      background: linear-gradient(to right, #3b82f6, #0ea5e9);
       color: var(--white);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .btn-primary:hover {
-      background: linear-gradient(to right, #059669, #0d9488);
+      background: linear-gradient(to right, #2563eb, #0284c7);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
@@ -186,6 +207,10 @@
       height: 0.75rem;
     }
 
+    .mr-2 {
+      margin-right: 0.5rem;
+    }
+
     .board {
       position: relative;
       width: 100%;
@@ -195,17 +220,19 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--board-border);
       overflow: hidden;
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
     }
 
     .note {
       position: absolute;
       padding: 0;
       border-radius: var(--radius-lg);
-      box-shadow: 0 2px 4px var(--note-shadow);
+      box-shadow: 0 2px 8px var(--note-shadow);
       transition: all 0.2s ease;
-      width: 250px;
+      width: 280px;
       border-width: 2px;
       border-style: solid;
+      background-color: var(--white);
     }
 
     .note.dragging {
@@ -232,12 +259,16 @@
     .note-title {
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--slate-500);
-      max-width: 100px;
+      color: var(--slate-700);
+      max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       margin-left: 0.5rem;
+    }
+
+    .dark .note-title {
+      color: var(--slate-300);
     }
 
     .note-actions {
@@ -252,11 +283,92 @@
       word-break: break-word;
       color: var(--slate-700);
       min-height: 80px;
-      max-height: 200px;
+      max-height: 300px;
       overflow-y: auto;
     }
 
-    .color-picker {
+    .dark .note-content {
+      color: var(--slate-300);
+    }
+
+    .note-link {
+      display: block;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.03);
+      border-radius: var(--radius-md);
+      color: var(--blue-500);
+      text-decoration: none;
+      word-break: break-all;
+      transition: background-color 0.2s;
+    }
+
+    .note-link:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      text-decoration: underline;
+    }
+
+    .dark .note-link {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .dark .note-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .link-preview {
+      margin-top: 0.75rem;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--slate-200);
+    }
+
+    .dark .link-preview {
+      border-color: var(--slate-700);
+    }
+
+    .preview-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      background-color: var(--slate-100);
+    }
+
+    .preview-content {
+      padding: 0.75rem;
+    }
+
+    .preview-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+      color: var(--slate-800);
+    }
+
+    .dark .preview-title {
+      color: var(--slate-200);
+    }
+
+    .preview-description {
+      font-size: 0.75rem;
+      color: var(--slate-600);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .dark .preview-description {
+      color: var(--slate-400);
+    }
+
+    .preview-domain {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--slate-500);
+    }
+
+    .category-picker {
       position: absolute;
       right: 0.5rem;
       top: 2.5rem;
@@ -265,21 +377,56 @@
       border-radius: var(--radius-md);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       border: 1px solid var(--slate-200);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.25rem;
       z-index: 50;
+      width: 180px;
     }
 
-    .color-option {
-      width: 1.5rem;
-      height: 1.5rem;
-      border-radius: var(--radius-full);
-      cursor: pointer;
-      border: 1px solid var(--slate-300);
+    .dark .category-picker {
+      background-color: var(--slate-800);
+      border-color: var(--slate-700);
+    }
+
+    .category-option {
       display: flex;
       align-items: center;
-      justify-content: center;
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .category-option:hover {
+      background-color: var(--slate-100);
+    }
+
+    .dark .category-option:hover {
+      background-color: var(--slate-700);
+    }
+
+    .category-color {
+      width: 1rem;
+      height: 1rem;
+      border-radius: var(--radius-full);
+      margin-right: 0.5rem;
+    }
+
+    .category-label {
+      font-size: 0.875rem;
+      color: var(--slate-700);
+    }
+
+    .dark .category-label {
+      color: var(--slate-300);
+    }
+
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
     }
 
     .modal-overlay {
@@ -314,6 +461,11 @@
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
+    .dark .modal-content {
+      background-color: var(--slate-900);
+      border: 1px solid var(--slate-800);
+    }
+
     .modal-overlay.active .modal-content {
       transform: scale(1);
       opacity: 1;
@@ -324,10 +476,18 @@
       border-bottom: 1px solid var(--slate-200);
     }
 
+    .dark .modal-header {
+      border-color: var(--slate-800);
+    }
+
     .modal-title {
       font-size: 1.25rem;
       font-weight: 600;
       color: var(--slate-800);
+    }
+
+    .dark .modal-title {
+      color: var(--slate-200);
     }
 
     .modal-body {
@@ -342,10 +502,27 @@
       border-top: 1px solid var(--slate-200);
     }
 
-    .textarea {
+    .dark .modal-footer {
+      border-color: var(--slate-800);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--slate-700);
+    }
+
+    .dark .form-label {
+      color: var(--slate-300);
+    }
+
+    .textarea, .input {
       width: 100%;
-      min-height: 150px;
-      resize: none;
       border: 1px solid var(--slate-300);
       border-radius: var(--radius-md);
       padding: 0.75rem;
@@ -354,11 +531,49 @@
       color: var(--slate-800);
       outline: none;
       transition: border-color 0.2s ease;
+      background-color: var(--white);
     }
 
-    .textarea:focus {
-      border-color: #3b82f6;
+    .dark .textarea, .dark .input {
+      border-color: var(--slate-700);
+      background-color: var(--slate-900);
+      color: var(--slate-200);
+    }
+
+    .textarea {
+      min-height: 100px;
+      resize: none;
+    }
+
+    .textarea:focus, .input:focus {
+      border-color: var(--blue-500);
       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .select {
+      width: 100%;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--slate-800);
+      outline: none;
+      transition: border-color 0.2s ease;
+      background-color: var(--white);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.5rem center;
+      background-size: 1rem;
+      padding-right: 2rem;
+    }
+
+    .dark .select {
+      border-color: var(--slate-700);
+      background-color: var(--slate-900);
+      color: var(--slate-200);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     }
 
     .keyboard-hint {
@@ -377,43 +592,53 @@
       border: 1px solid var(--slate-300);
     }
 
+    .dark .btn-secondary {
+      background-color: var(--slate-800);
+      color: var(--slate-200);
+      border-color: var(--slate-700);
+    }
+
     .btn-secondary:hover {
       background-color: var(--slate-100);
+    }
+
+    .dark .btn-secondary:hover {
+      background-color: var(--slate-700);
     }
 
     .hidden {
       display: none;
     }
 
-    /* Note colors */
-    .bg-amber-100 {
-      background-color: var(--amber-100);
-      border-color: var(--amber-300);
+    /* Categorías de notas */
+    .category-restaurant {
+      background-color: var(--restaurant-bg);
+      border-color: var(--restaurant-border);
     }
 
-    .bg-sky-100 {
-      background-color: var(--sky-100);
-      border-color: var(--sky-300);
+    .category-lodging {
+      background-color: var(--lodging-bg);
+      border-color: var(--lodging-border);
     }
 
-    .bg-emerald-100 {
-      background-color: var(--emerald-100);
-      border-color: var(--emerald-300);
+    .category-activity {
+      background-color: var(--activity-bg);
+      border-color: var(--activity-border);
     }
 
-    .bg-rose-100 {
-      background-color: var(--rose-100);
-      border-color: var(--rose-300);
+    .category-nightlife {
+      background-color: var(--nightlife-bg);
+      border-color: var(--nightlife-border);
     }
 
-    .bg-violet-100 {
-      background-color: var(--violet-100);
-      border-color: var(--violet-300);
+    .category-beach {
+      background-color: var(--beach-bg);
+      border-color: var(--beach-border);
     }
 
-    .bg-orange-100 {
-      background-color: var(--orange-100);
-      border-color: var(--orange-300);
+    .category-other {
+      background-color: var(--other-bg);
+      border-color: var(--other-border);
     }
 
     /* Responsive styles */
@@ -424,7 +649,7 @@
       }
 
       .note {
-        width: 200px;
+        width: 250px;
       }
     }
 
@@ -452,37 +677,59 @@
   <div class="container">
     <header>
       <div class="header-left">
-        <h1>📝 Sticky Notes</h1>
-        <div id="connectionStatus" class="connection-status status-disconnected">Disconnected</div>
+        <h1>🌍 Tablero de Planes</h1>
+        <div id="connectionStatus" class="connection-status status-disconnected">Desconectado</div>
       </div>
       <button id="addNoteBtn" class="btn btn-primary">
         <svg class="icon mr-2" viewBox="0 0 24 24">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        Add Note
+        Añadir Plan
       </button>
     </header>
 
     <div id="board" class="board">
-      <!-- Notes will be dynamically added here -->
+      <!-- Las notas se añadirán dinámicamente aquí -->
     </div>
   </div>
 
-  <!-- Modal for creating/editing notes -->
+  <!-- Modal para crear/editar notas -->
   <div id="noteModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modalTitle" class="modal-title">Create New Note</h3>
+        <h3 id="modalTitle" class="modal-title">Crear Nuevo Plan</h3>
       </div>
       <div class="modal-body">
-        <textarea id="noteContent" class="textarea" placeholder="Write your note here..."></textarea>
+        <div class="form-group">
+          <label for="noteTitle" class="form-label">Título</label>
+          <input type="text" id="noteTitle" class="input" placeholder="Título del plan">
+        </div>
+        <div class="form-group">
+          <label for="noteContent" class="form-label">Descripción</label>
+          <textarea id="noteContent" class="textarea" placeholder="Describe el lugar o actividad..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="noteLink" class="form-label">Enlace (Airbnb, Google Maps, etc.)</label>
+          <input type="url" id="noteLink" class="input" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="noteCategory" class="form-label">Categoría</label>
+          <select id="noteCategory" class="select">
+            <option value="restaurant">🍽️ Restaurante</option>
+            <option value="lodging">🏠 Alojamiento</option>
+            <option value="activity">🎯 Actividad</option>
+            <option value="nightlife">🌃 Vida nocturna</option>
+            <option value="beach">🏖️ Playa</option>
+            <option value="other">📌 Otro</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
-        <div class="keyboard-hint">Press Ctrl+Enter to save</div>
+        <div class="keyboard-hint">Presiona Ctrl+Enter para guardar</div>
         <div class="btn-group">
-          <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
-          <button id="saveNoteBtn" class="btn btn-primary">Save</button>
+          <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+          <button id="saveNoteBtn" class="btn btn-primary">Guardar</button>
         </div>
       </div>
     </div>
@@ -511,7 +758,10 @@
     const board = document.getElementById('board');
     const noteModal = document.getElementById('noteModal');
     const modalTitle = document.getElementById('modalTitle');
+    const noteTitle = document.getElementById('noteTitle');
     const noteContent = document.getElementById('noteContent');
+    const noteLink = document.getElementById('noteLink');
+    const noteCategory = document.getElementById('noteCategory');
     const addNoteBtn = document.getElementById('addNoteBtn');
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -527,16 +777,16 @@
     let draggedNote = null;
     let dragOffset = { x: 0, y: 0 };
     let highestZIndex = 1;
-    let showColorPicker = null;
+    let showCategoryPicker = null;
 
-    // Available colors for notes
-    const noteColors = [
-      { class: 'bg-amber-100', name: 'Amber' },
-      { class: 'bg-sky-100', name: 'Sky' },
-      { class: 'bg-emerald-100', name: 'Emerald' },
-      { class: 'bg-rose-100', name: 'Rose' },
-      { class: 'bg-violet-100', name: 'Violet' },
-      { class: 'bg-orange-100', name: 'Orange' }
+    // Categorías disponibles
+    const categories = [
+      { value: 'restaurant', label: '🍽️ Restaurante', class: 'category-restaurant' },
+      { value: 'lodging', label: '🏠 Alojamiento', class: 'category-lodging' },
+      { value: 'activity', label: '🎯 Actividad', class: 'category-activity' },
+      { value: 'nightlife', label: '🌃 Vida nocturna', class: 'category-nightlife' },
+      { value: 'beach', label: '🏖️ Playa', class: 'category-beach' },
+      { value: 'other', label: '📌 Otro', class: 'category-other' }
     ];
 
     // Initialize Socket.io
@@ -544,14 +794,14 @@
 
     // Socket.io event handlers
     socket.on('connect', () => {
-      console.log('✅ Connected to server');
-      connectionStatus.textContent = 'Connected';
+      console.log('✅ Conectado al servidor');
+      connectionStatus.textContent = 'Conectado';
       connectionStatus.classList.remove('status-disconnected');
       connectionStatus.classList.add('status-connected');
     });
 
     socket.on('disconnect', () => {
-      connectionStatus.textContent = 'Disconnected';
+      connectionStatus.textContent = 'Desconectado';
       connectionStatus.classList.remove('status-connected');
       connectionStatus.classList.add('status-disconnected');
     });
@@ -559,7 +809,10 @@
     socket.on('loadNotes', loadedNotes => {
       notes = loadedNotes.map(note => ({
         ...note,
-        color: note.color || 'bg-amber-100',
+        title: note.title || extractTitle(note.content),
+        link: note.link || extractLink(note.content),
+        category: note.category || 'other',
+        color: getCategoryClass(note.category || 'other'),
         zIndex: note.zIndex || 1,
         minimized: note.minimized || false
       }));
@@ -572,7 +825,10 @@
     socket.on('newNote', note => {
       const newNote = {
         ...note,
-        color: note.color || 'bg-amber-100',
+        title: note.title || extractTitle(note.content),
+        link: note.link || extractLink(note.content),
+        category: note.category || 'other',
+        color: getCategoryClass(note.category || 'other'),
         zIndex: note.zIndex || highestZIndex + 1,
         minimized: note.minimized || false
       };
@@ -585,6 +841,10 @@
       notes = notes.map(note => 
         note.id === updatedNote.id ? {
           ...updatedNote,
+          title: updatedNote.title || extractTitle(updatedNote.content),
+          link: updatedNote.link || extractLink(updatedNote.content),
+          category: updatedNote.category || 'other',
+          color: getCategoryClass(updatedNote.category || 'other'),
           zIndex: updatedNote.zIndex || note.zIndex,
           minimized: updatedNote.minimized !== undefined ? updatedNote.minimized : note.minimized
         } : note
@@ -603,6 +863,40 @@
       if (noteElement) noteElement.remove();
     });
 
+    // Helper functions
+    function extractTitle(content) {
+      if (!content) return 'Sin título';
+      const firstLine = content.split('\n')[0];
+      return firstLine.substring(0, 30) + (firstLine.length > 30 ? '...' : '');
+    }
+
+    function extractLink(content) {
+      if (!content) return '';
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const matches = content.match(urlRegex);
+      return matches ? matches[0] : '';
+    }
+
+    function getCategoryClass(categoryValue) {
+      const category = categories.find(c => c.value === categoryValue);
+      return category ? category.class : 'category-other';
+    }
+
+    function getCategoryLabel(categoryValue) {
+      const category = categories.find(c => c.value === categoryValue);
+      return category ? category.label : '📌 Otro';
+    }
+
+    function getDomainFromUrl(url) {
+      if (!url) return '';
+      try {
+        const domain = new URL(url).hostname;
+        return domain.replace('www.', '');
+      } catch (e) {
+        return '';
+      }
+    }
+
     // Functions to handle notes
     function renderAllNotes() {
       board.innerHTML = '';
@@ -620,7 +914,7 @@
       // Create note element
       const noteElement = document.createElement('div');
       noteElement.id = `note-${note.id}`;
-      noteElement.className = `note ${note.color || 'bg-amber-100'}`;
+      noteElement.className = `note ${note.color || 'category-other'}`;
       noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
       noteElement.style.zIndex = note.zIndex || 1;
       
@@ -632,24 +926,22 @@
               <line x1="4" y1="9" x2="20" y2="9"></line>
               <line x1="4" y1="15" x2="20" y2="15"></line>
             </svg>
-            <span class="note-title">${note.content.split('\n')[0]}</span>
+            <span class="note-title">${note.title || extractTitle(note.content)}</span>
           </div>
           <div class="note-actions">
-            <button class="btn btn-icon btn-ghost color-btn" title="Change color">
+            <button class="btn btn-icon btn-ghost category-btn" title="Cambiar categoría">
               <svg class="icon icon-sm" viewBox="0 0 24 24">
-                <circle cx="13.5" cy="6.5" r="2.5"></circle>
-                <circle cx="19" cy="13" r="2.5"></circle>
-                <circle cx="6" cy="12" r="2.5"></circle>
-                <circle cx="12" cy="19" r="2.5"></circle>
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
               </svg>
             </button>
-            <button class="btn btn-icon btn-ghost edit-btn" title="Edit note">
+            <button class="btn btn-icon btn-ghost edit-btn" title="Editar plan">
               <svg class="icon icon-sm" viewBox="0 0 24 24">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </button>
-            <button class="btn btn-icon btn-ghost minimize-btn" title="${note.minimized ? 'Maximize' : 'Minimize'}">
+            <button class="btn btn-icon btn-ghost minimize-btn" title="${note.minimized ? 'Maximizar' : 'Minimizar'}">
               <svg class="icon icon-sm ${note.minimized ? 'hidden' : ''}" viewBox="0 0 24 24">
                 <polyline points="8 3 18 3 18 13"></polyline>
                 <polyline points="16 8 21 3 16 8"></polyline>
@@ -662,7 +954,7 @@
                 <line x1="3" y1="21" x2="10" y2="14"></line>
               </svg>
             </button>
-            <button class="btn btn-icon btn-ghost btn-danger delete-btn" title="Delete note">
+            <button class="btn btn-icon btn-ghost btn-danger delete-btn" title="Eliminar plan">
               <svg class="icon icon-sm" viewBox="0 0 24 24">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -672,7 +964,7 @@
             </button>
           </div>
         </div>
-        <div class="color-picker hidden"></div>
+        <div class="category-picker hidden"></div>
       `;
       
       noteElement.innerHTML = headerHTML;
@@ -681,34 +973,51 @@
       if (!note.minimized) {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'note-content';
+        
+        // Contenido principal
         contentDiv.textContent = note.content;
+        
+        // Añadir enlace si existe
+        if (note.link) {
+          const linkElement = document.createElement('a');
+          linkElement.href = note.link;
+          linkElement.className = 'note-link';
+          linkElement.textContent = note.link;
+          linkElement.target = '_blank';
+          linkElement.rel = 'noopener noreferrer';
+          contentDiv.appendChild(linkElement);
+          
+          // Intentar crear una vista previa del enlace
+          createLinkPreview(note.link, contentDiv);
+        }
+        
+        // Añadir badge de categoría
+        const categoryBadge = document.createElement('div');
+        categoryBadge.className = `category-badge ${note.color}`;
+        categoryBadge.textContent = getCategoryLabel(note.category);
+        contentDiv.appendChild(categoryBadge);
+        
         noteElement.appendChild(contentDiv);
       }
       
       board.appendChild(noteElement);
       
-      // Set up color picker
-      const colorPicker = noteElement.querySelector('.color-picker');
-      noteColors.forEach(color => {
-        const colorOption = document.createElement('div');
-        colorOption.className = `color-option ${color.class}`;
-        colorOption.title = color.name;
+      // Set up category picker
+      const categoryPicker = noteElement.querySelector('.category-picker');
+      categories.forEach(category => {
+        const categoryOption = document.createElement('div');
+        categoryOption.className = 'category-option';
+        categoryOption.innerHTML = `
+          <div class="category-color ${category.class}"></div>
+          <div class="category-label">${category.label}</div>
+        `;
         
-        // Add checkmark if this is the current color
-        if (note.color === color.class) {
-          colorOption.innerHTML = `
-            <svg class="icon icon-sm" viewBox="0 0 24 24">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          `;
-        }
-        
-        colorOption.addEventListener('click', () => {
-          changeNoteColor(note.id, color.class);
-          colorPicker.classList.add('hidden');
+        categoryOption.addEventListener('click', () => {
+          changeNoteCategory(note.id, category.value);
+          categoryPicker.classList.add('hidden');
         });
         
-        colorPicker.appendChild(colorOption);
+        categoryPicker.appendChild(categoryOption);
       });
       
       // Set up event handlers
@@ -726,11 +1035,11 @@
       // Update title
       const titleElement = noteElement.querySelector('.note-title');
       if (titleElement) {
-        titleElement.textContent = note.content.split('\n')[0];
+        titleElement.textContent = note.title || extractTitle(note.content);
       }
       
-      // Update color
-      noteElement.className = `note ${note.color || 'bg-amber-100'}`;
+      // Update color/category
+      noteElement.className = `note ${note.color || getCategoryClass(note.category) || 'category-other'}`;
       
       // Update minimize/maximize state
       const minimizeBtn = noteElement.querySelector('.minimize-btn');
@@ -755,13 +1064,134 @@
           const contentDiv = document.createElement('div');
           contentDiv.className = 'note-content';
           contentDiv.textContent = note.content;
+          
+          // Añadir enlace si existe
+          if (note.link) {
+            const linkElement = document.createElement('a');
+            linkElement.href = note.link;
+            linkElement.className = 'note-link';
+            linkElement.textContent = note.link;
+            linkElement.target = '_blank';
+            linkElement.rel = 'noopener noreferrer';
+            contentDiv.appendChild(linkElement);
+            
+            // Intentar crear una vista previa del enlace
+            createLinkPreview(note.link, contentDiv);
+          }
+          
+          // Añadir badge de categoría
+          const categoryBadge = document.createElement('div');
+          categoryBadge.className = `category-badge ${note.color}`;
+          categoryBadge.textContent = getCategoryLabel(note.category);
+          contentDiv.appendChild(categoryBadge);
+          
           noteElement.appendChild(contentDiv);
         } else {
           // Update content if it exists
           const contentElement = noteElement.querySelector('.note-content');
           contentElement.textContent = note.content;
+          
+          // Actualizar o añadir enlace
+          let linkElement = contentElement.querySelector('.note-link');
+          if (note.link) {
+            if (!linkElement) {
+              linkElement = document.createElement('a');
+              linkElement.className = 'note-link';
+              linkElement.target = '_blank';
+              linkElement.rel = 'noopener noreferrer';
+              contentElement.appendChild(linkElement);
+              
+              // Intentar crear una vista previa del enlace
+              createLinkPreview(note.link, contentElement);
+            }
+            linkElement.href = note.link;
+            linkElement.textContent = note.link;
+          } else if (linkElement) {
+            linkElement.remove();
+            const previewElement = contentElement.querySelector('.link-preview');
+            if (previewElement) previewElement.remove();
+          }
+          
+          // Actualizar badge de categoría
+          let categoryBadge = contentElement.querySelector('.category-badge');
+          if (!categoryBadge) {
+            categoryBadge = document.createElement('div');
+            categoryBadge.className = 'category-badge';
+            contentElement.appendChild(categoryBadge);
+          }
+          categoryBadge.className = `category-badge ${note.color}`;
+          categoryBadge.textContent = getCategoryLabel(note.category);
         }
       }
+    }
+
+    function createLinkPreview(url, container) {
+      // Verificar si ya existe una vista previa
+      if (container.querySelector('.link-preview')) return;
+      
+      // Crear elemento de vista previa básica
+      const previewElement = document.createElement('div');
+      previewElement.className = 'link-preview';
+      
+      const domain = getDomainFromUrl(url);
+      
+      // Determinar qué tipo de vista previa crear basado en el dominio
+      if (url.includes('airbnb.com')) {
+        previewElement.innerHTML = `
+          <div class="preview-image" style="background-color: #FF5A5F; display: flex; align-items: center; justify-content: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#FFFFFF">
+              <path d="M12 2C14.5 2 16.5 4 16.5 6.5C16.5 9 15 11 13 12.5C12.5 13 11.5 13 11 12.5C9 11 7.5 9 7.5 6.5C7.5 4 9.5 2 12 2M12 4C10.5 4 9.5 5 9.5 6.5C9.5 8 10.5 9.5 12 10.5C13.5 9.5 14.5 8 14.5 6.5C14.5 5 13.5 4 12 4M14 13C16.5 13 18.5 15 18.5 17.5C18.5 20 16.5 22 14 22H10C7.5 22 5.5 20 5.5 17.5C5.5 15 7.5 13 10 13H14M10 15C8.5 15 7.5 16 7.5 17.5C7.5 19 8.5 20 10 20H14C15.5 20 16.5 19 16.5 17.5C16.5 16 15.5 15 14 15H10Z" />
+            </svg>
+          </div>
+          <div class="preview-content">
+            <div class="preview-title">Alojamiento en Airbnb</div>
+            <div class="preview-description">Ver detalles del alojamiento en Airbnb</div>
+            <div class="preview-domain">${domain}</div>
+          </div>
+        `;
+      } else if (url.includes('maps.google') || url.includes('goo.gl/maps')) {
+        previewElement.innerHTML = `
+          <div class="preview-image" style="background-color: #4285F4; display: flex; align-items: center; justify-content: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#FFFFFF">
+              <path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" />
+            </svg>
+          </div>
+          <div class="preview-content">
+            <div class="preview-title">Ubicación en Google Maps</div>
+            <div class="preview-description">Ver ubicación en el mapa</div>
+            <div class="preview-domain">${domain}</div>
+          </div>
+        `;
+      } else if (url.includes('tripadvisor')) {
+        previewElement.innerHTML = `
+          <div class="preview-image" style="background-color: #00AA6C; display: flex; align-items: center; justify-content: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#FFFFFF">
+              <path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,4C16.42,4 20,7.58 20,12C20,16.42 16.42,20 12,20C7.58,20 4,16.42 4,12C4,7.58 7.58,4 12,4M10,8C8.9,8 8,8.9 8,10C8,11.1 8.9,12 10,12C11.1,12 12,11.1 12,10C12,8.9 11.1,8 10,8M14,8C12.9,8 12,8.9 12,10C12,11.1 12.9,12 14,12C15.1,12 16,11.1 16,10C16,8.9 15.1,8 14,8M7,14C7,15.66 9.34,17 12,17C14.66,17 17,15.66 17,14H7Z" />
+            </svg>
+          </div>
+          <div class="preview-content">
+            <div class="preview-title">Reseñas en TripAdvisor</div>
+            <div class="preview-description">Ver opiniones y reseñas</div>
+            <div class="preview-domain">${domain}</div>
+          </div>
+        `;
+      } else {
+        // Vista previa genérica para otros sitios
+        previewElement.innerHTML = `
+          <div class="preview-image" style="background-color: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+            <svg class="icon" style="width: 40px; height: 40px;" viewBox="0 0 24 24">
+              <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" fill="#64748b" />
+            </svg>
+          </div>
+          <div class="preview-content">
+            <div class="preview-title">Enlace externo</div>
+            <div class="preview-description">Visitar sitio web</div>
+            <div class="preview-domain">${domain}</div>
+          </div>
+        `;
+      }
+      
+      container.appendChild(previewElement);
     }
 
     function setupNoteEvents(noteElement, noteId) {
@@ -775,19 +1205,19 @@
         deleteNote(noteId);
       });
       
-      // Color button
-      noteElement.querySelector('.color-btn').addEventListener('click', (e) => {
+      // Category button
+      noteElement.querySelector('.category-btn').addEventListener('click', (e) => {
         e.stopPropagation();
-        const colorPicker = noteElement.querySelector('.color-picker');
+        const categoryPicker = noteElement.querySelector('.category-picker');
         
-        // Close any other open color pickers
-        if (showColorPicker && showColorPicker !== noteId) {
-          const otherPicker = document.querySelector(`#note-${showColorPicker} .color-picker`);
+        // Close any other open category pickers
+        if (showCategoryPicker && showCategoryPicker !== noteId) {
+          const otherPicker = document.querySelector(`#note-${showCategoryPicker} .category-picker`);
           if (otherPicker) otherPicker.classList.add('hidden');
         }
         
-        colorPicker.classList.toggle('hidden');
-        showColorPicker = colorPicker.classList.contains('hidden') ? null : noteId;
+        categoryPicker.classList.toggle('hidden');
+        showCategoryPicker = categoryPicker.classList.contains('hidden') ? null : noteId;
       });
       
       // Minimize/Maximize button
@@ -795,14 +1225,10 @@
         toggleMinimize(noteId);
       });
       
-        () => {
-        toggleMinimize(noteId);
-      };
-      
       // Drag events
       noteElement.addEventListener('mousedown', (e) => {
         // Don't start drag if clicked on a button
-        if (e.target.closest('button')) return;
+        if (e.target.closest('button') || e.target.closest('a')) return;
         
         startDrag(e, noteId);
       });
@@ -874,8 +1300,11 @@
 
     function addNote() {
       activeNoteId = Date.now().toString();
-      modalTitle.textContent = 'Create New Note';
+      modalTitle.textContent = 'Crear Nuevo Plan';
+      noteTitle.value = '';
       noteContent.value = '';
+      noteLink.value = '';
+      noteCategory.value = 'other';
       openModal();
     }
 
@@ -884,8 +1313,11 @@
       if (!note) return;
       
       activeNoteId = noteId;
-      modalTitle.textContent = 'Edit Note';
-      noteContent.value = note.content;
+      modalTitle.textContent = 'Editar Plan';
+      noteTitle.value = note.title || '';
+      noteContent.value = note.content || '';
+      noteLink.value = note.link || '';
+      noteCategory.value = note.category || 'other';
       openModal();
     }
 
@@ -893,11 +1325,12 @@
       socket.emit('deleteNote', noteId);
     }
 
-    function changeNoteColor(noteId, colorClass) {
+    function changeNoteCategory(noteId, categoryValue) {
       const note = notes.find(n => n.id === noteId);
       if (!note) return;
       
-      note.color = colorClass;
+      note.category = categoryValue;
+      note.color = getCategoryClass(categoryValue);
       socket.emit('updateNote', note);
     }
 
@@ -922,24 +1355,35 @@
     function saveNote() {
       if (!activeNoteId) return;
       
+      const title = noteTitle.value.trim();
       const content = noteContent.value.trim();
-      if (!content) return;
+      const link = noteLink.value.trim();
+      const category = noteCategory.value;
+      
+      if (!title && !content) return;
       
       const existingNote = notes.find(n => n.id === activeNoteId);
       
       if (existingNote) {
         // Update existing note
+        existingNote.title = title;
         existingNote.content = content;
+        existingNote.link = link;
+        existingNote.category = category;
+        existingNote.color = getCategoryClass(category);
         socket.emit('updateNote', existingNote);
       } else {
         // Create new note
         const newZIndex = highestZIndex + 1;
         const newNote = {
           id: activeNoteId,
-          content,
+          title: title,
+          content: content,
+          link: link,
+          category: category,
+          color: getCategoryClass(category),
           x: Math.random() * (board.clientWidth * 0.6) + 50,
           y: Math.random() * (board.clientHeight * 0.5) + 50,
-          color: 'bg-amber-100',
           zIndex: newZIndex
         };
         socket.emit('newNote', newNote);
@@ -951,7 +1395,7 @@
 
     function openModal() {
       noteModal.classList.add('active');
-      noteContent.focus();
+      noteTitle.focus();
     }
 
     function closeModal() {
@@ -997,12 +1441,12 @@
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', stopDrag);
     
-    // Close color picker when clicking outside
+    // Close category picker when clicking outside
     document.addEventListener('click', (e) => {
-      if (showColorPicker && !e.target.closest('.color-btn') && !e.target.closest('.color-picker')) {
-        const colorPicker = document.querySelector(`#note-${showColorPicker} .color-picker`);
-        if (colorPicker) colorPicker.classList.add('hidden');
-        showColorPicker = null;
+      if (showCategoryPicker && !e.target.closest('.category-btn') && !e.target.closest('.category-picker')) {
+        const categoryPicker = document.querySelector(`#note-${showCategoryPicker} .category-picker`);
+        if (categoryPicker) categoryPicker.classList.add('hidden');
+        showCategoryPicker = null;
       }
     });
 
@@ -1020,26 +1464,35 @@
         const defaultNotes = [
           { 
             id: '1', 
-            content: 'Welcome to Sticky Notes!\n\nDrag this note to move it.', 
+            title: 'Restaurante La Marea',
+            content: 'Excelente restaurante de mariscos con vista al mar. Ideal para cenas románticas.',
+            link: 'https://maps.google.com/example-restaurant',
+            category: 'restaurant',
             x: 100, 
             y: 100, 
-            color: 'bg-amber-100',
+            color: 'category-restaurant',
             zIndex: 1
           },
           { 
             id: '2', 
-            content: 'Click the edit button to modify content.', 
+            title: 'Casa en Airbnb',
+            content: 'Hermosa casa con piscina para 6 personas. Disponible del 15 al 22 de julio.',
+            link: 'https://airbnb.com/example-house',
+            category: 'lodging',
             x: 400, 
             y: 150, 
-            color: 'bg-sky-100',
+            color: 'category-lodging',
             zIndex: 2
           },
           { 
             id: '3', 
-            content: 'Change note colors with the palette button.', 
+            title: 'Playa El Paraíso',
+            content: 'Playa con aguas cristalinas y arena blanca. Ideal para snorkel.',
+            link: 'https://maps.google.com/example-beach',
+            category: 'beach',
             x: 200, 
             y: 300, 
-            color: 'bg-emerald-100',
+            color: 'category-beach',
             zIndex: 3
           }
         ];
