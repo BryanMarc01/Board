@@ -1,4 +1,4 @@
-const socket = io("https://backend-devnotess.onrender.com/");
+const socket = io("https://backend-devnotess.onrender.com");
 const board = document.getElementById('board');
 
 socket.on('loadNotes', notes => {
