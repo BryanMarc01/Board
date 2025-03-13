@@ -6,6 +6,10 @@
   <title>🌍 Tablero de Planes | Viajes y Salidas</title>
   <!-- Socket.io CDN -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet JavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
       --bg-gradient-from: #f8fafc;
@@ -221,6 +225,70 @@
       border: 1px solid var(--board-border);
       overflow: hidden;
       background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+      display: none;
+    }
+
+    .board.active {
+      display: block;
+    }
+
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 10rem);
+      background-color: var(--board-bg);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--board-border);
+      overflow: hidden;
+      display: none;
+    }
+
+    .map-container.active {
+      display: block;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .map-overlay {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 10;
+      background-color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 0.5rem;
+      box-shadow: 0 2px 8px var(--note-shadow);
+      border: 1px solid var(--slate-200);
+    }
+
+    .dark .map-overlay {
+      background-color: var(--slate-800);
+      border-color: var(--slate-700);
+    }
+
+    .map-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .legend-color {
+      width: 1rem;
+      height: 1rem;
+      border-radius: var(--radius-sm);
     }
 
     .note {
@@ -756,15 +824,26 @@
       color: var(--blue-500);
     }
 
-    /* Filtros */
+    /* Filtros y controles */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
     .filters {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 1rem;
       flex-wrap: wrap;
     }
 
-    .filter-btn {
+    .view-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-btn, .view-btn {
       background-color: var(--white);
       border: 1px solid var(--slate-200);
       border-radius: var(--radius-full);
@@ -772,31 +851,72 @@
       font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
     }
 
-    .filter-btn:hover {
+    .filter-btn:hover, .view-btn:hover {
       background-color: var(--slate-100);
     }
 
-    .filter-btn.active {
+    .filter-btn.active, .view-btn.active {
       background-color: var(--blue-500);
       color: white;
       border-color: var(--blue-500);
     }
 
-    .dark .filter-btn {
+    .dark .filter-btn, .dark .view-btn {
       background-color: var(--slate-800);
       border-color: var(--slate-700);
     }
 
-    .dark .filter-btn:hover {
+    .dark .filter-btn:hover, .dark .view-btn:hover {
       background-color: var(--slate-700);
     }
 
-    .dark .filter-btn.active {
+    .dark .filter-btn.active, .dark .view-btn.active {
       background-color: var(--blue-500);
       color: white;
       border-color: var(--blue-500);
+    }
+
+    /* Map popup styles */
+    .map-popup {
+      max-width: 250px;
+    }
+
+    .map-popup-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .map-popup-content {
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .map-popup-category {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+    }
+
+    .map-popup-link {
+      display: block;
+      margin-top: 0.5rem;
+      color: var(--blue-500);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+
+    .map-popup-link:hover {
+      text-decoration: underline;
     }
 
     /* Responsive styles */
@@ -808,6 +928,12 @@
 
       .note {
         width: 250px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
       }
     }
 
@@ -827,6 +953,26 @@
 
     .dark .theme-toggle {
       background-color: var(--slate-800);
+      border-color: var(--slate-700);
+    }
+
+    /* Leaflet dark mode */
+    .dark .leaflet-tile {
+      filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+    }
+
+    .dark .leaflet-container {
+      background: #303030;
+    }
+
+    .dark .leaflet-control-attribution {
+      background: rgba(70, 70, 70, 0.7);
+      color: #ddd;
+    }
+
+    .dark .leaflet-control-zoom a {
+      background-color: var(--slate-800);
+      color: var(--slate-200);
       border-color: var(--slate-700);
     }
   </style>
@@ -852,18 +998,72 @@
       <span class="budget-amount">$0.00</span>
     </div>
 
-    <div class="filters">
-      <button class="filter-btn active" data-category="all">Todos</button>
-      <button class="filter-btn" data-category="restaurant">🍽️ Restaurantes</button>
-      <button class="filter-btn" data-category="lodging">🏠 Alojamientos</button>
-      <button class="filter-btn" data-category="activity">🎯 Actividades</button>
-      <button class="filter-btn" data-category="nightlife">🌃 Vida nocturna</button>
-      <button class="filter-btn" data-category="beach">🏖️ Playas</button>
-      <button class="filter-btn" data-category="other">📌 Otros</button>
+    <div class="controls">
+      <div class="filters">
+        <button class="filter-btn active" data-category="all">Todos</button>
+        <button class="filter-btn" data-category="restaurant">🍽️ Restaurantes</button>
+        <button class="filter-btn" data-category="lodging">🏠 Alojamientos</button>
+        <button class="filter-btn" data-category="activity">🎯 Actividades</button>
+        <button class="filter-btn" data-category="nightlife">🌃 Vida nocturna</button>
+        <button class="filter-btn" data-category="beach">🏖️ Playas</button>
+        <button class="filter-btn" data-category="other">📌 Otros</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="board">
+          <svg class="icon icon-sm mr-2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Tablero
+        </button>
+        <button class="view-btn" data-view="map">
+          <svg class="icon icon-sm mr-2" viewBox="0 0 24 24">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          Mapa
+        </button>
+      </div>
     </div>
    
-    <div id="board" class="board">
+    <div id="board" class="board active">
       <!-- Las notas se añadirán dinámicamente aquí -->
+    </div>
+
+    <div id="mapContainer" class="map-container">
+      <div id="map"></div>
+      <div class="map-overlay">
+        <h3>Leyenda</h3>
+        <div class="map-legend">
+          <div class="legend-item">
+            <div class="legend-color category-restaurant"></div>
+            <span>Restaurantes</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color category-lodging"></div>
+            <span>Alojamientos</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color category-activity"></div>
+            <span>Actividades</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color category-nightlife"></div>
+            <span>Vida nocturna</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color category-beach"></div>
+            <span>Playas</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color category-other"></div>
+            <span>Otros</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -922,13 +1122,20 @@
         </div>
         
         <div class="form-group">
-          <label for="noteLat" class="form-label">Latitud (opcional)</label>
-          <input type="number" step="0.000001" id="noteLat" class="input" placeholder="Ej: 40.416775">
-        </div>
-        
-        <div class="form-group">
-          <label for="noteLng" class="form-label">Longitud (opcional)</label>
-          <input type="number" step="0.000001" id="noteLng" class="input" placeholder="Ej: -3.703790">
+          <label for="noteLocation" class="form-label">Ubicación en el Mapa</label>
+          <div class="input-group">
+            <div class="form-group">
+              <label for="noteLat" class="form-label">Latitud</label>
+              <input type="number" step="0.000001" id="noteLat" class="input" placeholder="Ej: 40.416775">
+            </div>
+            <div class="form-group">
+              <label for="noteLng" class="form-label">Longitud</label>
+              <input type="number" step="0.000001" id="noteLng" class="input" placeholder="Ej: -3.703790">
+            </div>
+            <button id="pickLocationBtn" class="btn btn-secondary" type="button">
+              Seleccionar en Mapa
+            </button>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -936,6 +1143,33 @@
         <div class="btn-group">
           <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
           <button id="saveNoteBtn" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para seleccionar ubicación en el mapa -->
+  <div id="locationModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Seleccionar Ubicación</h3>
+      </div>
+      <div class="modal-body">
+        <div id="locationPickerMap" style="width: 100%; height: 300px;"></div>
+        <p class="mt-2 text-sm text-slate-500">Haz clic en el mapa para seleccionar la ubicación.</p>
+        <div class="form-group">
+          <label for="pickedLat" class="form-label">Latitud</label>
+          <input type="text" id="pickedLat" class="input" readonly>
+        </div>
+        <div class="form-group">
+          <label for="pickedLng" class="form-label">Longitud</label>
+          <input type="text" id="pickedLng" class="input" readonly>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="btn-group">
+          <button id="cancelLocationBtn" class="btn btn-secondary">Cancelar</button>
+          <button id="confirmLocationBtn" class="btn btn-primary">Confirmar</button>
         </div>
       </div>
     </div>
@@ -962,7 +1196,9 @@
   <script>
     // DOM Elements
     const board = document.getElementById('board');
+    const mapContainer = document.getElementById('mapContainer');
     const noteModal = document.getElementById('noteModal');
+    const locationModal = document.getElementById('locationModal');
     const modalTitle = document.getElementById('modalTitle');
     const noteTitle = document.getElementById('noteTitle');
     const noteContent = document.getElementById('noteContent');
@@ -974,6 +1210,12 @@
     const notePriority = document.getElementById('notePriority');
     const noteLat = document.getElementById('noteLat');
     const noteLng = document.getElementById('noteLng');
+    const pickLocationBtn = document.getElementById('pickLocationBtn');
+    const locationPickerMap = document.getElementById('locationPickerMap');
+    const pickedLat = document.getElementById('pickedLat');
+    const pickedLng = document.getElementById('pickedLng');
+    const confirmLocationBtn = document.getElementById('confirmLocationBtn');
+    const cancelLocationBtn = document.getElementById('cancelLocationBtn');
     const addNoteBtn = document.getElementById('addNoteBtn');
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -983,6 +1225,7 @@
     const moonIcon = document.getElementById('moonIcon');
     const budgetSummary = document.getElementById('budgetSummary');
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const viewButtons = document.querySelectorAll('.view-btn');
 
     // Application State
     let notes = [];
@@ -993,20 +1236,126 @@
     let highestZIndex = 1;
     let showCategoryPicker = null;
     let activeFilter = 'all';
+    let activeView = 'board';
     let totalBudget = 0;
+    let map = null;
+    let markers = {};
+    let locationPickerInstance = null;
+    let tempMarker = null;
 
     // Categorías disponibles
     const categories = [
-      { value: 'restaurant', label: '🍽️ Restaurante', class: 'category-restaurant' },
-      { value: 'lodging', label: '🏠 Alojamiento', class: 'category-lodging' },
-      { value: 'activity', label: '🎯 Actividad', class: 'category-activity' },
-      { value: 'nightlife', label: '🌃 Vida nocturna', class: 'category-nightlife' },
-      { value: 'beach', label: '🏖️ Playa', class: 'category-beach' },
-      { value: 'other', label: '📌 Otro', class: 'category-other' }
+      { value: 'restaurant', label: '🍽️ Restaurante', class: 'category-restaurant', color: '#fca5a5' },
+      { value: 'lodging', label: '🏠 Alojamiento', class: 'category-lodging', color: '#7dd3fc' },
+      { value: 'activity', label: '🎯 Actividad', class: 'category-activity', color: '#6ee7b7' },
+      { value: 'nightlife', label: '🌃 Vida nocturna', class: 'category-nightlife', color: '#c4b5fd' },
+      { value: 'beach', label: '🏖️ Playa', class: 'category-beach', color: '#fcd34d' },
+      { value: 'other', label: '📌 Otro', class: 'category-other', color: '#d8b4fe' }
     ];
 
     // Initialize Socket.io
     const socket = io("https://backend-devnotess.onrender.com");
+
+    // Initialize Map
+    function initMap() {
+      // Create main map
+      map = L.map('map').setView([0, 0], 2);
+      
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+      
+      // Initialize location picker map
+      locationPickerInstance = L.map('locationPickerMap').setView([0, 0], 2);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(locationPickerInstance);
+      
+      // Add click event to location picker map
+      locationPickerInstance.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        
+        // Update input fields
+        pickedLat.value = lat.toFixed(6);
+        pickedLng.value = lng.toFixed(6);
+        
+        // Add or move temporary marker
+        if (tempMarker) {
+          tempMarker.setLatLng(e.latlng);
+        } else {
+          tempMarker = L.marker(e.latlng).addTo(locationPickerInstance);
+        }
+      });
+      
+      // If there are notes with coordinates, add them to the map
+      updateMapMarkers();
+    }
+
+    // Update map markers based on notes
+    function updateMapMarkers() {
+      if (!map) return;
+      
+      // Clear existing markers
+      Object.values(markers).forEach(marker => map.removeLayer(marker));
+      markers = {};
+      
+      // Add markers for notes with coordinates
+      notes
+        .filter(note => note.lat && note.lng)
+        .filter(note => activeFilter === 'all' || note.category === activeFilter)
+        .forEach(note => {
+          const category = categories.find(c => c.value === note.category) || categories[5]; // Default to 'other'
+          
+          // Create custom icon
+          const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background-color: ${category.color}; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">${category.label[0]}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            popupAnchor: [0, -12]
+          });
+          
+          // Create marker
+          const marker = L.marker([note.lat, note.lng], { icon }).addTo(map);
+          
+          // Create popup content
+          const popupContent = `
+            <div class="map-popup">
+              <div class="map-popup-title">${note.title || 'Sin título'}</div>
+              <div class="map-popup-content">${note.content}</div>
+              <div class="map-popup-category ${category.class}">${category.label}</div>
+              ${note.cost ? `<div class="map-popup-cost">💰 $${parseFloat(note.cost).toFixed(2)}</div>` : ''}
+              ${note.link ? `<a href="${note.link}" target="_blank" class="map-popup-link">Ver enlace</a>` : ''}
+              <button class="btn btn-secondary btn-sm view-note-btn" data-note-id="${note.id}">Ver detalles</button>
+            </div>
+          `;
+          
+          // Bind popup to marker
+          marker.bindPopup(popupContent);
+          
+          // Add click event to marker
+          marker.on('click', () => {
+            // Center map on marker with animation
+            map.flyTo([note.lat, note.lng], 14, {
+              animate: true,
+              duration: 1
+            });
+          });
+          
+          // Store marker reference
+          markers[note.id] = marker;
+        });
+      
+      // If there are markers, fit map bounds to show all markers
+      if (Object.keys(markers).length > 0) {
+        const markerGroup = L.featureGroup(Object.values(markers));
+        map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+      }
+    }
 
     // Socket.io event handlers
     socket.on('connect', () => {
@@ -1049,6 +1398,9 @@
       
       // Render notes
       renderAllNotes();
+      
+      // Update map markers
+      updateMapMarkers();
     });
 
     socket.on('totalCost', total => {
@@ -1086,6 +1438,11 @@
         renderNote(newNote);
       }
       
+      // Update map markers
+      if (newNote.lat && newNote.lng) {
+        updateMapMarkers();
+      }
+      
       // Show notification
       if (Notification.permission === 'granted') {
         new Notification('Nuevo plan agregado!', {
@@ -1098,6 +1455,8 @@
     socket.on('updateNote', updatedNote => {
       const oldNote = notes.find(n => n.id === updatedNote.id);
       const oldCost = oldNote ? oldNote.cost || 0 : 0;
+      const hadCoordinates = oldNote && oldNote.lat && oldNote.lng;
+      const hasCoordinates = updatedNote.lat && updatedNote.lng;
       
       notes = notes.map(note => 
         note.id === updatedNote.id ? {
@@ -1138,6 +1497,11 @@
         renderNote(updatedNote);
       }
       
+      // Update map markers if coordinates changed
+      if (hadCoordinates || hasCoordinates) {
+        updateMapMarkers();
+      }
+      
       if (updatedNote.zIndex && updatedNote.zIndex > highestZIndex) {
         highestZIndex = updatedNote.zIndex;
       }
@@ -1155,6 +1519,12 @@
       // Remove from DOM
       const noteElement = document.getElementById(`note-${noteId}`);
       if (noteElement) noteElement.remove();
+      
+      // Remove marker from map
+      if (markers[noteId]) {
+        map.removeLayer(markers[noteId]);
+        delete markers[noteId];
+      }
     });
 
     // Helper functions
@@ -1179,6 +1549,11 @@
     function getCategoryLabel(categoryValue) {
       const category = categories.find(c => c.value === categoryValue);
       return category ? category.label : '📌 Otro';
+    }
+
+    function getCategoryColor(categoryValue) {
+      const category = categories.find(c => c.value === categoryValue);
+      return category ? category.color : '#d8b4fe';
     }
 
     function getDomainFromUrl(url) {
@@ -1350,6 +1725,14 @@
           contentDiv.appendChild(dateBadge);
         }
         
+        // Añadir información de ubicación si existe
+        if (note.lat && note.lng) {
+          const locationBadge = document.createElement('div');
+          locationBadge.className = 'date-badge';
+          locationBadge.innerHTML = `📍 ${note.lat.toFixed(6)}, ${note.lng.toFixed(6)}`;
+          contentDiv.appendChild(locationBadge);
+        }
+        
         // Añadir badge de categoría
         const categoryBadge = document.createElement('div');
         categoryBadge.className = `category-badge ${note.color}`;
@@ -1480,6 +1863,14 @@
             contentDiv.appendChild(dateBadge);
           }
           
+          // Añadir información de ubicación si existe
+          if (note.lat && note.lng) {
+            const locationBadge = document.createElement('div');
+            locationBadge.className = 'date-badge';
+            locationBadge.innerHTML = `📍 ${note.lat.toFixed(6)}, ${note.lng.toFixed(6)}`;
+            contentDiv.appendChild(locationBadge);
+          }
+          
           // Añadir badge de categoría
           const categoryBadge = document.createElement('div');
           categoryBadge.className = `category-badge ${note.color}`;
@@ -1552,6 +1943,19 @@
             }
           } else if (dateBadge) {
             dateBadge.remove();
+          }
+          
+          // Actualizar información de ubicación
+          let locationBadge = Array.from(contentElement.querySelectorAll('.date-badge')).find(badge => badge.textContent.startsWith('📍'));
+          if (note.lat && note.lng) {
+            if (!locationBadge) {
+              locationBadge = document.createElement('div');
+              locationBadge.className = 'date-badge';
+              contentElement.appendChild(locationBadge);
+            }
+            locationBadge.innerHTML = `📍 ${note.lat.toFixed(6)}, ${note.lng.toFixed(6)}`;
+          } else if (locationBadge) {
+            locationBadge.remove();
           }
           
           // Actualizar badge de categoría
@@ -1925,6 +2329,58 @@
       activeNoteId = null;
     }
 
+    function openLocationPicker() {
+      locationModal.classList.add('active');
+      
+      // Reset the location picker map
+      if (locationPickerInstance) {
+        locationPickerInstance.invalidateSize();
+        
+        // Set initial view based on existing coordinates or default
+        if (noteLat.value && noteLng.value) {
+          const lat = parseFloat(noteLat.value);
+          const lng = parseFloat(noteLng.value);
+          locationPickerInstance.setView([lat, lng], 13);
+          
+          // Add marker for existing location
+          if (tempMarker) {
+            tempMarker.setLatLng([lat, lng]);
+          } else {
+            tempMarker = L.marker([lat, lng]).addTo(locationPickerInstance);
+          }
+          
+          // Update input fields
+          pickedLat.value = lat.toFixed(6);
+          pickedLng.value = lng.toFixed(6);
+        } else {
+          // Default view if no coordinates
+          locationPickerInstance.setView([0, 0], 2);
+          
+          // Remove existing marker if any
+          if (tempMarker) {
+            locationPickerInstance.removeLayer(tempMarker);
+            tempMarker = null;
+          }
+          
+          // Clear input fields
+          pickedLat.value = '';
+          pickedLng.value = '';
+        }
+      }
+    }
+
+    function closeLocationPicker() {
+      locationModal.classList.remove('active');
+    }
+
+    function confirmLocation() {
+      if (pickedLat.value && pickedLng.value) {
+        noteLat.value = pickedLat.value;
+        noteLng.value = pickedLng.value;
+      }
+      closeLocationPicker();
+    }
+
     // Export to ICS
     async function exportICS(noteId) {
       const note = notes.find(n => n.id === noteId);
@@ -1997,6 +2453,35 @@
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
+    // Toggle view (board/map)
+    function toggleView(view) {
+      activeView = view;
+      
+      // Update view buttons
+      viewButtons.forEach(btn => {
+        if (btn.dataset.view === view) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      // Show/hide views
+      if (view === 'board') {
+        board.classList.add('active');
+        mapContainer.classList.remove('active');
+      } else {
+        board.classList.remove('active');
+        mapContainer.classList.add('active');
+        
+        // Refresh map when switching to map view
+        if (map) {
+          map.invalidateSize();
+          updateMapMarkers();
+        }
+      }
+    }
+
     // Filter notes
     function filterNotes(category) {
       activeFilter = category;
@@ -2012,6 +2497,9 @@
       
       // Render filtered notes
       renderAllNotes();
+      
+      // Update map markers
+      updateMapMarkers();
     }
 
     // Set up event listeners
@@ -2019,6 +2507,9 @@
     saveNoteBtn.addEventListener('click', saveNote);
     cancelBtn.addEventListener('click', closeModal);
     themeToggle.addEventListener('click', toggleTheme);
+    pickLocationBtn.addEventListener('click', openLocationPicker);
+    confirmLocationBtn.addEventListener('click', confirmLocation);
+    cancelLocationBtn.addEventListener('click', closeLocationPicker);
     
     // Filter buttons
     filterButtons.forEach(btn => {
@@ -2027,9 +2518,20 @@
       });
     });
     
+    // View toggle buttons
+    viewButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleView(btn.dataset.view);
+      });
+    });
+    
     // Close modal when clicking outside
     noteModal.addEventListener('click', (e) => {
       if (e.target === noteModal) closeModal();
+    });
+    
+    locationModal.addEventListener('click', (e) => {
+      if (e.target === locationModal) closeLocationPicker();
     });
     
     // Allow submitting with Ctrl+Enter in textarea
@@ -2065,6 +2567,11 @@
       moonIcon.classList.remove('hidden');
     }
 
+    // Initialize map when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+    });
+
     // Initialize with default notes if none exist after 1 second
     setTimeout(() => {
       if (notes.length === 0) {
@@ -2078,6 +2585,8 @@
             cost: 150,
             startDate: '2023-07-20T20:00',
             priority: 'normal',
+            lat: 20.6534,
+            lng: -87.0467,
             x: 100, 
             y: 100, 
             color: 'category-restaurant',
@@ -2095,6 +2604,8 @@
             startDate: '2023-07-15T14:00',
             endDate: '2023-07-22T11:00',
             priority: 'high',
+            lat: 20.6634,
+            lng: -87.0367,
             x: 400, 
             y: 150, 
             color: 'category-lodging',
@@ -2112,8 +2623,8 @@
             startDate: '2023-07-17T09:00',
             endDate: '2023-07-17T18:00',
             priority: 'normal',
-            lat: 20.6534,
-            lng: -87.0467,
+            lat: 20.6734,
+            lng: -87.0267,
             x: 200, 
             y: 300, 
             color: 'category-beach',
@@ -2127,6 +2638,7 @@
         highestZIndex = 3;
         updateTotalBudget();
         renderAllNotes();
+        updateMapMarkers();
       }
     }, 1000);
   </script>
