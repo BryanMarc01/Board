@@ -982,23 +982,23 @@ socket.on('totalCost', total => {
     }
 
     function renderNote(note) {
-  // Si la nota ya existe, solo la actualizamos
+  // 1) Verificar si la nota ya existe en el DOM
   const existingNote = document.getElementById(`note-${note.id}`);
   if (existingNote) {
+    // Si existe, la actualizamos y salimos
     updateNoteElement(note);
     return;
   }
 
-  // -----------------------
-  // CREAR la nota (nuevo elemento DIV)
-  // -----------------------
+  // 2) CREAR la nota (nuevo elemento DIV)
   const noteElement = document.createElement('div');
   noteElement.id = `note-${note.id}`;
   noteElement.className = `note ${note.color || 'category-other'}`;
   noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
   noteElement.style.zIndex = note.zIndex || 1;
 
-  // Cabecera con el botón ICS
+  // 3) Cabecera y contenido HTML (botones, categoría, etc.)
+  // --- Pega aquí tu HTML (headerHTML, etc.) ---
   const headerHTML = `
     <div class="note-header">
       <div class="note-header-left">
@@ -1009,157 +1009,43 @@ socket.on('totalCost', total => {
         <span class="note-title">${note.title || ''}</span>
       </div>
       <div class="note-actions">
-        <!-- Botones de categoría, editar, etc. -->
-
-        <!-- Botón de Exportar ICS -->
+        <!-- Botones y Export ICS -->
         <button class="btn btn-icon btn-ghost export-ics-btn" title="Exportar a Calendario">
           <svg class="icon icon-sm" viewBox="0 0 24 24">
             <path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 
-              2 0 0 0-2 2v14a2 2 0 0 0 2 
-              2h14a2 2 0 0 0 2-2V5a2 2 
-              0 0 0-2-2zm0 16H5V8h14z"></path>
+            2 0 0 0-2 2v14a2 2 0 0 0 2 
+            2h14a2 2 0 0 0 2-2V5a2 2 
+            0 0 0-2-2zm0 16H5V8h14z"></path>
           </svg>
         </button>
-
-        <!-- Botón de minimizar, eliminar, etc. -->
       </div>
     </div>
     <div class="category-picker hidden"></div>
   `;
-
   noteElement.innerHTML = headerHTML;
-  // Aquí añades el resto de tu contenido (si la nota no está minimizada, etc.)
 
-  // -----------------------
-  // AÑADIR noteElement al board
-  // -----------------------
+  // 4) Si NO está minimizada, crea el contenido principal
+  if (!note.minimized) {
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'note-content';
+    contentDiv.textContent = note.content;
+
+    // Link, vista previa, categoría, etc.
+    // ...
+    noteElement.appendChild(contentDiv);
+  }
+
+  // 5) Añadir la nota al contenedor
   board.appendChild(noteElement);
 
-  // -----------------------
-  // CONFIGURAR EVENTOS
-  // -----------------------
-  // 1) Lógica existente (edit, delete, etc.)
+  // 6) Configurar el category-picker, eventos, etc.
   setupNoteEvents(noteElement, note.id);
-
-  // 2) Evento para exportar ICS
   noteElement.querySelector('.export-ics-btn').addEventListener('click', () => {
-    exportICS(note.id); // Llamar a la función que hace fetch y descarga
+    exportICS(note.id);
   });
 }
 
 
-      // Create note element
-      const noteElement = document.createElement('div');
-      noteElement.id = `note-${note.id}`;
-      noteElement.className = `note ${note.color || 'category-other'}`;
-      noteElement.style.transform = `translate(${note.x}px, ${note.y}px)`;
-      noteElement.style.zIndex = note.zIndex || 1;
-      
-      // Note header with title and actions
-      const headerHTML = `
-        <div class="note-header">
-          <div class="note-header-left">
-            <svg class="icon icon-sm" viewBox="0 0 24 24">
-              <line x1="4" y1="9" x2="20" y2="9"></line>
-              <line x1="4" y1="15" x2="20" y2="15"></line>
-            </svg>
-            <span class="note-title">${note.title || extractTitle(note.content)}</span>
-          </div>
-          <div class="note-actions">
-            <button class="btn btn-icon btn-ghost category-btn" title="Cambiar categoría">
-              <svg class="icon icon-sm" viewBox="0 0 24 24">
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                <line x1="7" y1="7" x2="7.01" y2="7"></line>
-              </svg>
-            </button>
-            <button class="btn btn-icon btn-ghost edit-btn" title="Editar plan">
-              <svg class="icon icon-sm" viewBox="0 0 24 24">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-            </button>
-            <button class="btn btn-icon btn-ghost minimize-btn" title="${note.minimized ? 'Maximizar' : 'Minimizar'}">
-              <svg class="icon icon-sm ${note.minimized ? 'hidden' : ''}" viewBox="0 0 24 24">
-                <polyline points="8 3 18 3 18 13"></polyline>
-                <polyline points="16 8 21 3 16 8"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              <svg class="icon icon-sm ${note.minimized ? '' : 'hidden'}" viewBox="0 0 24 24">
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <polyline points="9 21 3 21 3 15"></polyline>
-                <line x1="21" y1="3" x2="14" y2="10"></line>
-                <line x1="3" y1="21" x2="10" y2="14"></line>
-              </svg>
-            </button>
-            <button class="btn btn-icon btn-ghost btn-danger delete-btn" title="Eliminar plan">
-              <svg class="icon icon-sm" viewBox="0 0 24 24">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="category-picker hidden"></div>
-      `;
-      
-      noteElement.innerHTML = headerHTML;
-      
-      // Add note content if not minimized
-      if (!note.minimized) {
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'note-content';
-        
-        // Contenido principal
-        contentDiv.textContent = note.content;
-        
-        // Añadir enlace si existe
-        if (note.link) {
-          const linkElement = document.createElement('a');
-          linkElement.href = note.link;
-          linkElement.className = 'note-link';
-          linkElement.textContent = note.link;
-          linkElement.target = '_blank';
-          linkElement.rel = 'noopener noreferrer';
-          contentDiv.appendChild(linkElement);
-          
-          // Intentar crear una vista previa del enlace
-          createLinkPreview(note.link, contentDiv);
-        }
-        
-        // Añadir badge de categoría
-        const categoryBadge = document.createElement('div');
-        categoryBadge.className = `category-badge ${note.color}`;
-        categoryBadge.textContent = getCategoryLabel(note.category);
-        contentDiv.appendChild(categoryBadge);
-        
-        noteElement.appendChild(contentDiv);
-      }
-      
-      board.appendChild(noteElement);
-      
-      // Set up category picker
-      const categoryPicker = noteElement.querySelector('.category-picker');
-      categories.forEach(category => {
-        const categoryOption = document.createElement('div');
-        categoryOption.className = 'category-option';
-        categoryOption.innerHTML = `
-          <div class="category-color ${category.class}"></div>
-          <div class="category-label">${category.label}</div>
-        `;
-        
-        categoryOption.addEventListener('click', () => {
-          changeNoteCategory(note.id, category.value);
-          categoryPicker.classList.add('hidden');
-        });
-        
-        categoryPicker.appendChild(categoryOption);
-      });
-      
-      // Set up event handlers
-      setupNoteEvents(noteElement, note.id);
-    
 
     function updateNoteElement(note) {
       const noteElement = document.getElementById(`note-${note.id}`);
@@ -1510,6 +1396,7 @@ socket.on('totalCost', total => {
   const lng       = parseFloat(noteLng.value) || null;
 
 
+  const existingNote = notes.find(n => n.id === activeNoteId);
 
   if (existingNote) {
     existingNote.title     = title;
